@@ -29,7 +29,7 @@ main{max-width:760px;margin:auto}.totals{display:grid;grid-template-columns:1fr 
 .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}.controls button{height:42px;border-radius:10px;font-size:21px;font-weight:900;border:1px solid #594b3b;background:#24201b;color:var(--gold)}.controls button.plus{background:linear-gradient(135deg,#b51c2a,#79121b);border-color:#d7474e;color:white}
 .bottom{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:18px 0 8px}.action{padding:12px}.action.primary{background:#9e1823;border-color:#d33b45;color:white}.action.gold{border-color:#8b6d34;color:var(--gold)}
 .history{background:#141414;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px}.history-head{display:flex;justify-content:space-between;align-items:center;font-weight:800}.history-list{font-size:12px;color:#ccc;max-height:120px;overflow:auto;margin-top:8px}.history-list div{padding:5px 0;border-top:1px solid #292929}
-.note{color:#888;font-size:11px;line-height:1.6;margin:12px 2px}.toast{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#292018;border:1px solid var(--gold);color:#f7e4b7;padding:10px 16px;border-radius:99px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
+.match-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.match-list{font-size:12px;color:#ccc;max-height:220px;overflow:auto;margin-top:8px}.match-row{padding:9px 0;border-top:1px solid #292929;display:flex;justify-content:space-between;gap:8px}.result-dialog{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:20px;z-index:10}.result-dialog.open{display:flex}.dialog-card{width:min(100%,420px);background:#171717;border:1px solid #8b6d34;border-radius:16px;padding:18px}.dialog-card h3{margin:0 0 12px;color:var(--gold)}.result-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.result-buttons button{padding:12px 4px;border-radius:9px;border:1px solid var(--line);background:#24201b;color:#fff;font-weight:800}.dialog-cancel{margin-top:12px;width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#222;color:#ddd}.note{color:#888;font-size:11px;line-height:1.6;margin:12px 2px}.toast{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#292018;border:1px solid var(--gold);color:#f7e4b7;padding:10px 16px;border-radius:99px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
 @media(min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.item{padding:14px}.count{font-size:34px}}
 </style>
 </head>
@@ -46,62 +46,43 @@ main{max-width:760px;margin:auto}.totals{display:grid;grid-template-columns:1fr 
  <div id="items"></div>
  <div class="bottom"><button class="action primary" id="newFight">⚔ 新しいファイト</button><button class="action" id="finish">ファイト終了</button></div>
  <div class="history"><div class="history-head"><span>操作履歴</span><span id="historyCount" style="color:var(--gold)">0件</span></div><div class="history-list" id="history"></div></div>
+ <div class="history"><div class="history-head"><span>対戦記録</span><span id="matchCount" style="color:var(--gold)">0戦</span></div><div class="match-list" id="matchList">まだ対戦記録はありません</div><div class="match-tools"><button class="action gold" id="exportCsv">CSVを書き出す</button></div></div>
  <p class="note">数値はこのiPhone内に自動保存されます。Safariでホーム画面に追加すると、アプリのように起動できます。ファイト終了では現在の数値を保持し、新しいファイトで両プレイヤーの数値を0に戻します。</p>
-</main><div class="toast" id="toast"></div>
+</main><div class="result-dialog" id="resultDialog"><div class="dialog-card"><h3>対戦結果を記録</h3><p>自分から見た今回の結果を選択してください。</p><div class="result-buttons"><button data-result="勝ち">勝ち</button><button data-result="負け">負け</button><button data-result="引き分け">引き分け</button></div><button class="dialog-cancel" id="cancelResult">キャンセル</button></div></div><div class="toast" id="toast"></div>
 <script>
 const groups=[
  {id:"trigger",title:"TRIGGERS / トリガー",items:["☆トリガー","治トリガー","引トリガー","前トリガー","超トリガー"]},
  {id:"tarot",title:"TAROT / タロットカード",items:["愚者","魔術師","女教皇","女帝","皇帝","法王","恋愛","戦車","正義","隠者","運命","剛毅","刑死者","死神","節制","悪魔","塔","星","月","太陽","審判","世界"]}
 ];
-const names=groups.flatMap(g=>g.items);
-const fresh=()=>Object.fromEntries(names.map(n=>[n,0]));
-const defaultState=()=>({counts:{自分:fresh(),相手:fresh()},player:"自分",history:[],status:"待機中"});
-let state=load();
-function load(){try{const s=JSON.parse(localStorage.getItem("vc-state"));if(s&&s.counts&&s.counts.自分&&s.counts.相手)return s}catch(e){}return defaultState()}
+const names=groups.flatMap(g=>g.items),fresh=()=>Object.fromEntries(names.map(n=>[n,0]));
+const defaultState=()=>({counts:{自分:fresh(),相手:fresh()},player:"自分",history:[],status:"待機中",matches:[]});
+function load(){try{const s=JSON.parse(localStorage.getItem("vc-state"));if(s&&s.counts&&s.counts.自分&&s.counts.相手){s.matches=Array.isArray(s.matches)?s.matches:[];s.history=Array.isArray(s.history)?s.history:[];for(const p of ["自分","相手"])for(const n of names)if(typeof s.counts[p][n]!=="number")s.counts[p][n]=0;return s}}catch(e){}return defaultState()}
+let state=load(),filter="all";const $=id=>document.getElementById(id);
 function save(){localStorage.setItem("vc-state",JSON.stringify(state))}
-let filter="all";
-const $=id=>document.getElementById(id);
 function total(p){return Object.values(state.counts[p]).reduce((a,b)=>a+b,0)}
+function triggerTotal(p){return groups[0].items.reduce((a,n)=>a+state.counts[p][n],0)}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1700)}
 function render(){
  $("myTotal").textContent=total("自分");$("opTotal").textContent=total("相手");
  $("myTab").classList.toggle("active",state.player==="自分");$("opTab").classList.toggle("active",state.player==="相手");
- const q=$("search").value.trim();const root=$("items");root.innerHTML="";
+ const q=$("search").value.trim(),root=$("items");root.innerHTML="";
  groups.filter(g=>filter==="all"||filter===g.id).forEach(g=>{
-  const items=g.items.filter(n=>n.includes(q));if(!items.length)return;
-  const section=document.createElement("section");section.className="section";
-  const h=document.createElement("h2");h.textContent=g.title;section.append(h);
-  const grid=document.createElement("div");grid.className="grid";
-  items.forEach(name=>{
-   const card=document.createElement("div");card.className="item";
-   const title=document.createElement("div");title.className="item-name";title.textContent=name;
-   const count=document.createElement("div");count.className="count";count.textContent=state.counts[state.player][name];
-   const controls=document.createElement("div");controls.className="controls";
-   const minus=document.createElement("button");minus.textContent="−";minus.setAttribute("aria-label",name+"を1減らす");minus.onclick=()=>change(name,-1);
-   const plus=document.createElement("button");plus.className="plus";plus.textContent="＋";plus.setAttribute("aria-label",name+"を1増やす");plus.onclick=()=>change(name,1);
-   controls.append(minus,plus);card.append(title,count,controls);grid.append(card);
-  });section.append(grid);root.append(section);
+  let items=g.items.filter(n=>n.includes(q));if(g.id==="tarot")items.sort((a,b)=>state.counts[state.player][b]-state.counts[state.player][a]||g.items.indexOf(a)-g.items.indexOf(b));if(!items.length)return;
+  const section=document.createElement("section");section.className="section";const h=document.createElement("h2");h.textContent=g.title+(g.id==="trigger"?` / 合計 ${triggerTotal(state.player)}`:" / 多い順");section.append(h);const grid=document.createElement("div");grid.className="grid";
+  items.forEach(name=>{const card=document.createElement("div");card.className="item";const title=document.createElement("div");title.className="item-name";title.textContent=name;const count=document.createElement("div");count.className="count";count.textContent=state.counts[state.player][name];const controls=document.createElement("div");controls.className="controls";const minus=document.createElement("button");minus.textContent="−";minus.setAttribute("aria-label",name+"を1減らす");minus.onclick=()=>change(name,-1);const plus=document.createElement("button");plus.className="plus";plus.textContent="＋";plus.setAttribute("aria-label",name+"を1増やす");plus.onclick=()=>change(name,1);controls.append(minus,plus);card.append(title,count,controls);grid.append(card)});section.append(grid);root.append(section);
  });
- $("historyCount").textContent=state.history.length+"件";
- $("history").innerHTML="";
- state.history.slice().reverse().slice(0,8).forEach(x=>{const row=document.createElement("div");row.textContent=x.player+"："+x.name+" "+(x.delta>0?"+1":"−1");$("history").append(row)});
- $("undo").disabled=!state.history.length;$("undo").style.opacity=state.history.length?1:.45;
+ $("historyCount").textContent=state.history.length+"件";$("history").innerHTML="";state.history.slice().reverse().slice(0,8).forEach(x=>{const row=document.createElement("div");row.textContent=x.player+"："+x.name+" "+(x.delta>0?"+1":"−1");$("history").append(row)});$("undo").disabled=!state.history.length;$("undo").style.opacity=state.history.length?1:.45;
+ $("matchCount").textContent=state.matches.length+"戦";const ml=$("matchList");ml.innerHTML="";if(!state.matches.length)ml.textContent="まだ対戦記録はありません";state.matches.slice().reverse().slice(0,20).forEach(m=>{const row=document.createElement("div");row.className="match-row";const left=document.createElement("span");left.textContent=m.date+"　"+m.result;const right=document.createElement("span");right.textContent=`自分 ${m.myTotal} / 相手 ${m.opTotal}（トリガー ${m.myTriggers} : ${m.opTriggers}）`;row.append(left,right);ml.append(row)});
 }
-function change(name,delta){
- const before=JSON.parse(JSON.stringify(state.counts));
- const v=state.counts[state.player][name]+delta;if(v<0){toast("0未満にはできません");return}
- state.history.push({before,player:state.player,name,delta});if(state.history.length>100)state.history.shift();
- state.counts[state.player][name]=v;save();render();
-}
+function change(name,delta){const before=JSON.parse(JSON.stringify(state.counts)),v=state.counts[state.player][name]+delta;if(v<0){toast("0未満にはできません");return}state.history.push({before,player:state.player,name,delta});if(state.history.length>100)state.history.shift();state.counts[state.player][name]=v;save();render()}
 function undo(){const x=state.history.pop();if(!x)return;state.counts=x.before;state.player=x.player;save();render();toast("直前の操作を取り消しました")}
-function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1700)}
-$("myTab").onclick=()=>{state.player="自分";save();render()};
-$("opTab").onclick=()=>{state.player="相手";save();render()};
-$("undo").onclick=undo;
-$("search").oninput=render;
+$("myTab").onclick=()=>{state.player="自分";save();render()};$("opTab").onclick=()=>{state.player="相手";save();render()};$("undo").onclick=undo;$("search").oninput=render;
 document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));render()});
-$("newFight").onclick=()=>{if(confirm("自分・相手の全カウントと履歴をリセットして、新しいファイトを開始しますか？")){state.counts={自分:fresh(),相手:fresh()};state.history=[];state.player="自分";state.status="ファイト中";save();render();toast("新しいファイトを開始しました")}};
-$("finish").onclick=()=>{state.status="終了";save();toast("ファイト終了。数値は保存されています")};
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-render();
+$("newFight").onclick=()=>{if(confirm("自分・相手の全カウントと操作履歴をリセットして、新しいファイトを開始しますか？（対戦記録は残ります）")){state.counts={自分:fresh(),相手:fresh()};state.history=[];state.player="自分";state.status="ファイト中";save();render();toast("新しいファイトを開始しました")}};
+$("finish").onclick=()=>$("resultDialog").classList.add("open");$("cancelResult").onclick=()=>$("resultDialog").classList.remove("open");
+document.querySelectorAll("[data-result]").forEach(b=>b.onclick=()=>{const date=new Date().toLocaleString("ja-JP");state.matches.push({date,result:b.dataset.result,myTotal:total("自分"),opTotal:total("相手"),myTriggers:triggerTotal("自分"),opTriggers:triggerTotal("相手"),counts:JSON.parse(JSON.stringify(state.counts))});state.status="終了";save();$("resultDialog").classList.remove("open");render();toast(b.dataset.result+"で対戦記録を保存しました")});
+$("exportCsv").onclick=()=>{if(!state.matches.length){toast("出力できる対戦記録がありません");return}const header=["日時","結果","自分合計","相手合計","自分トリガー合計","相手トリガー合計",...names.map(n=>"自分_"+n),...names.map(n=>"相手_"+n)];const rows=state.matches.map(m=>[m.date,m.result,m.myTotal,m.opTotal,m.myTriggers,m.opTriggers,...names.map(n=>m.counts.自分[n]),...names.map(n=>m.counts.相手[n])]);const esc=v=>'"'+String(v??"").replace(/"/g,'""')+'"';const csv='\uFEFF'+[header,...rows].map(r=>r.map(esc).join(",")).join("\r\n");const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="Vanguard_Counter_対戦記録.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast("CSVを書き出しました")};
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));render();
+
 </script>
 </body></html>
