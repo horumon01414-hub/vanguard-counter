@@ -57,7 +57,7 @@ main{max-width:760px;margin:auto}.totals{display:grid;grid-template-columns:1fr 
 <script>
 const groups=[
  {id:"trigger",title:"TRIGGERS / トリガー",items:["☆トリガー","治トリガー","引トリガー","前トリガー","超トリガー"]},
- {id:"tarot",title:"TAROT / タロットカード",items:["愚者","魔術師","女教皇","女帝","皇帝","法王","恋愛","戦車","正義","隠者","運命","剛毅","刑死者","死神","節制","悪魔","塔","星","月","太陽","審判","世界"]}
+ {id:"tarot",title:"TAROT / タロットカード",items:["愚者","魔術師","女教皇","女帝","皇帝","法王","恋愛","戦車","正義","隠者","運命","剛毅","刑死者","死神","節制","悪魔","塔","星","月","太陽","審判","世界","信念","永劫","道化師","顧問官"]}
 ];
 const names=groups.flatMap(g=>g.items),fresh=()=>Object.fromEntries(names.map(n=>[n,0]));
 const defaultState=()=>({counts:{自分:fresh(),相手:fresh()},player:"自分",history:[],status:"待機中",matches:[]});
