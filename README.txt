@@ -1,9 +1,9 @@
-Vanguard Fight Tool v24 本番版
+Vanguard Fight Tool v28 PRODUCTION
 
-変更点:
-- パワー増減表の「相手後列」「相手前列」「自分前列」「自分後列」の見出しを非表示
-- 相手側・自分側の大きな枠の見出しを「相手フィールド」「自分フィールド」に変更
-- V/R表示、各3枠×4列の配置、パワー・クリティカル等の操作は維持
+GitHub Pages production repository upload package.
+Upload all files in this ZIP to the repository root (do not upload the ZIP itself).
 
-アップロード先: horumon01414-hub/vanguard-counter
-ZIPを展開し、中の6ファイルをアップロードしてください。
+Production repository: horumon01414-hub/vanguard-counter
+Production URL: https://horumon01414-hub.github.io/vanguard-counter/
+
+This package is the tested v28 build.
