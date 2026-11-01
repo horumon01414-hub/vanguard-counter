@@ -1,9 +1,11 @@
-Vanguard Fight Tool v28 PRODUCTION
+Vanguard Fight Tool v33 TEST
 
-GitHub Pages production repository upload package.
-Upload all files in this ZIP to the repository root (do not upload the ZIP itself).
+GitHub Pages test repository upload package.
+Upload all extracted files in this ZIP to the repository root (do not upload the ZIP itself).
 
-Production repository: horumon01414-hub/vanguard-counter
-Production URL: https://horumon01414-hub.github.io/vanguard-counter/
+v33: Trigger images are selected by the user and stored locally in this device's browser storage (IndexedDB). Image files are not included in the public repository package. Existing trigger-counting and fight-management features are retained.
 
-This package is the tested v28 build.
+Test repository: horumon01414-hub/vanguard-counter-test
+Test URL: https://horumon01414-hub.github.io/vanguard-counter-test/
+
+Note: After updating, open the Deck screen and select each of the five trigger images from the iPhone Files or Photos picker. Images are stored on this device only and are not uploaded to GitHub by the app.
