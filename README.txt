@@ -1,11 +1,9 @@
-Vanguard Fight Tool v33 TEST
+Vanguard Fight Tool v35 正式公開用
 
-GitHub Pages test repository upload package.
-Upload all extracted files in this ZIP to the repository root (do not upload the ZIP itself).
+対象リポジトリ: horumon01414-hub/vanguard-counter
 
-v33: Trigger images are selected by the user and stored locally in this device's browser storage (IndexedDB). Image files are not included in the public repository package. Existing trigger-counting and fight-management features are retained.
+ZIPを解凍し、6ファイルを本番リポジトリのmainへアップロードしてください。ZIP自体はアップロードしないでください。
 
-Test repository: horumon01414-hub/vanguard-counter-test
-Test URL: https://horumon01414-hub.github.io/vanguard-counter-test/
+変更: MP3対応、アルカナ画像拡大、P3/P4・P5切替、超トリガー使用済み表示、解除時の効果取り消し。
 
-Note: After updating, open the Deck screen and select each of the five trigger images from the iPhone Files or Photos picker. Images are stored on this device only and are not uploaded to GitHub by the app.
+注意: SafariのWebサイトデータを消去すると登録済み画像・音声が失われる可能性があります。元ファイルは別途保存してください。
