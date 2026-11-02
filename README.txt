@@ -1,4 +1,6 @@
-Vanguard Fight Tool v40
-v39の機能を維持し、設定タブにバージョン表示・更新確認ボタンを追加。
-Service Workerをネットワーク優先・オフライン代替に変更。IndexedDBとlocalStorageは削除しません。
-更新の初回適用には新バージョンの読み込みが必要です。古いService Workerの挙動により初回更新が遅れる場合があります。
+Vanguard Fight Tool v41 — Apple Music音声共存テスト版
+v40の全機能を維持し、Audio Session APIのambientモードを効果音再生前に設定します。
+設定タブから「BGMとの同時再生を優先」「従来の再生方式」を選択できます。
+Apple Musicの音量を自動で下げることはできず、iOSの仕様により同時再生も保証されません。
+IndexedDB/localStorageの画像・音声・設定データを消去する処理はありません。
+ZIPを解凍し、6ファイルを本番用GitHubリポジトリにアップロードしてください。

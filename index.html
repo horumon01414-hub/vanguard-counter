@@ -325,7 +325,25 @@ async function mediaGet(key){const db=await mediaDb();return new Promise((resolv
 async function mediaPut(key,file){const db=await mediaDb();return new Promise((resolve,reject)=>{const tx=db.transaction("assets","readwrite");tx.objectStore("assets").put(file,key);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
 async function mediaDelete(key){const db=await mediaDb();return new Promise((resolve,reject)=>{const tx=db.transaction("assets","readwrite");tx.objectStore("assets").delete(key);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
 async function mediaUrl(key){if(mediaUrls[key])return mediaUrls[key];const file=await mediaGet(key);if(!file)return null;return mediaUrls[key]=URL.createObjectURL(file)}
-async function playStoredAudio(key,volume){try{const url=await mediaUrl(key);if(!url)return;const a=new Audio(url);a.volume=Math.min(1,Math.max(0,volume));await a.play()}catch(e){console.warn("音声再生できません",e)}}
+// Apple Music等のバックグラウンド音声との共存を試みる。未対応端末では従来方式にフォールバック。
+function configureAudioSession(){
+  try{
+    if("audioSession" in navigator && navigator.audioSession){
+      navigator.audioSession.type=settings.audioMixMode==="legacy"?"playback":"ambient";
+      return true;
+    }
+  }catch(e){console.warn("Audio Session設定に対応していません",e)}
+  return false;
+}
+async function playStoredAudio(key,volume){
+  try{
+    configureAudioSession();
+    const url=await mediaUrl(key);if(!url)return;
+    const a=new Audio(url);
+    a.volume=Math.min(1,Math.max(0,volume));
+    await a.play();
+  }catch(e){console.warn("音声再生できません",e)}
+}
 function mediaRow(parent,label,key,kind,volumeKey){
  const row=document.createElement("div");row.className="settings-row";
  const title=document.createElement("div");title.className="settings-title";title.textContent=label;row.append(title);
@@ -347,7 +365,7 @@ const arcanaRotationChanges=new Map();
 async function renderArcanaImage(title,name){const url=await mediaUrl("arcana-"+(settings.arcanaVariant||"p34")+"-"+name);if(url&&title.isConnected){const img=document.createElement("img");img.src=url;img.className="arcana-mini";const count=state.counts[state.player][name]||0;const angle=Math.max(0,Math.min(3,count)-1)*90;img.style.transform="rotate("+angle+"deg)";title.prepend(img);const key=state.player+"|"+name;const previous=arcanaRotationChanges.get(key);if(previous!==undefined){arcanaRotationChanges.delete(key);const start=Math.max(0,Math.min(3,previous)-1)*90;if(start!==angle&&img.animate){img.style.transform="rotate("+start+"deg)";const animateRotation=()=>{if(!img.isConnected)return;const animation=img.animate([{transform:"rotate("+start+"deg)"},{transform:"rotate("+angle+"deg)"}],{duration:420,easing:"ease-in-out",fill:"forwards"});animation.onfinish=()=>{img.style.transform="rotate("+angle+"deg)";animation.cancel()}};if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){img.style.transform="rotate("+angle+"deg)"}else setTimeout(animateRotation,510)}}}}
 
 
-const APP_VERSION="v40";
+const APP_VERSION="v41";
 let appWorkerRegistration=null;
 let appUpdateReady=false;
 function showAppUpdateStatus(message){const el=document.getElementById("appUpdateStatus");if(el)el.textContent=message}
@@ -378,6 +396,20 @@ function addAppUpdateUI(){
  btn.addEventListener("click",checkAppUpdate);
  const status=document.createElement("p");status.id="appUpdateStatus";status.setAttribute("role","status");status.textContent="画像・音声などの登録データは削除しません。";status.style.marginTop="8px";
  section.append(title,version,btn,status);panel.append(section);
+ const audioSection=document.createElement("section");
+ audioSection.style.cssText="border:2px solid #ad8a45;border-radius:12px;padding:14px;margin:16px 0;";
+ const audioTitle=document.createElement("h3");audioTitle.textContent="Apple Musicとの同時再生（実験機能）";
+ const audioInfo=document.createElement("p");audioInfo.textContent="BGMを停止させずに効果音を再生する設定を試します。iPhoneの仕様により同時再生は保証されません。";
+ const audioLabel=document.createElement("label");audioLabel.className="field";audioLabel.textContent="効果音の再生方式";
+ const audioSelect=document.createElement("select");audioSelect.setAttribute("aria-label","効果音の再生方式");
+ for(const [value,label] of [["ambient","BGMとの同時再生を優先（推奨）"],["legacy","従来の再生方式"]]){
+  const opt=document.createElement("option");opt.value=value;opt.textContent=label;audioSelect.append(opt);
+ }
+ audioSelect.value=settings.audioMixMode==="legacy"?"legacy":"ambient";
+ audioSelect.onchange=()=>{settings.audioMixMode=audioSelect.value;saveSettings();configureAudioSession();};
+ audioLabel.append(audioSelect);
+ const audioNote=document.createElement("p");audioNote.style.marginTop="8px";audioNote.textContent="Apple Musicの音量を自動で小さくする機能ではありません。";
+ audioSection.append(audioTitle,audioInfo,audioLabel,audioNote);panel.append(audioSection);
 }
 if("serviceWorker" in navigator){
  let refreshing=false;
@@ -387,6 +419,7 @@ if("serviceWorker" in navigator){
   location.reload();
  });
  window.addEventListener("load",async()=>{
+  configureAudioSession();
   addAppUpdateUI();
   try{
    const reg=await navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"});
