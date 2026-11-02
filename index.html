@@ -346,7 +346,63 @@ async function showPersonaMedia(){const complete=[];for(let i=1;i<=3;i++)if(awai
 const arcanaRotationChanges=new Map();
 async function renderArcanaImage(title,name){const url=await mediaUrl("arcana-"+(settings.arcanaVariant||"p34")+"-"+name);if(url&&title.isConnected){const img=document.createElement("img");img.src=url;img.className="arcana-mini";const count=state.counts[state.player][name]||0;const angle=Math.max(0,Math.min(3,count)-1)*90;img.style.transform="rotate("+angle+"deg)";title.prepend(img);const key=state.player+"|"+name;const previous=arcanaRotationChanges.get(key);if(previous!==undefined){arcanaRotationChanges.delete(key);const start=Math.max(0,Math.min(3,previous)-1)*90;if(start!==angle&&img.animate){img.style.transform="rotate("+start+"deg)";const animateRotation=()=>{if(!img.isConnected)return;const animation=img.animate([{transform:"rotate("+start+"deg)"},{transform:"rotate("+angle+"deg)"}],{duration:420,easing:"ease-in-out",fill:"forwards"});animation.onfinish=()=>{img.style.transform="rotate("+angle+"deg)";animation.cancel()}};if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){img.style.transform="rotate("+angle+"deg)"}else setTimeout(animateRotation,510)}}}}
 
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+
+const APP_VERSION="v40";
+let appWorkerRegistration=null;
+let appUpdateReady=false;
+function showAppUpdateStatus(message){const el=document.getElementById("appUpdateStatus");if(el)el.textContent=message}
+function showUpdateReady(){appUpdateReady=true;showAppUpdateStatus("新しいバージョンを取得しました。「更新を適用」を押してください。");const b=document.getElementById("appUpdateButton");if(b)b.textContent="更新を適用"}
+async function checkAppUpdate(){
+ const b=document.getElementById("appUpdateButton");
+ if(b)b.disabled=true;
+ showAppUpdateStatus("更新を確認しています…");
+ try{
+  if(!("serviceWorker" in navigator)){showAppUpdateStatus("この環境ではアプリ更新機能を使用できません");return}
+  const reg=appWorkerRegistration||await navigator.serviceWorker.getRegistration("./");
+  if(!reg){showAppUpdateStatus("更新管理を準備しています。アプリを再起動してください");return}
+  if(reg.waiting){reg.waiting.postMessage({type:"SKIP_WAITING"});showAppUpdateStatus("更新を適用しています…");return}
+  if(appUpdateReady){showAppUpdateStatus("更新の準備ができています。もう一度お試しください");return}
+  await reg.update();
+  if(reg.waiting){reg.waiting.postMessage({type:"SKIP_WAITING"});showAppUpdateStatus("更新を適用しています…");return}
+  showAppUpdateStatus("現在のバージョンは最新です（"+APP_VERSION+"）");
+ }catch(e){showAppUpdateStatus("更新を確認できませんでした。通信状況をご確認ください")}
+ finally{if(b)b.disabled=false}
+}
+function addAppUpdateUI(){
+ const panel=document.getElementById("settingsPanel");if(!panel||document.getElementById("appUpdateButton"))return;
+ const section=document.createElement("section");
+ section.style.cssText="border:2px solid #ad8a45;border-radius:12px;padding:14px;margin:16px 0;";
+ const title=document.createElement("h3");title.textContent="アプリのバージョン・更新";
+ const version=document.createElement("p");version.textContent="現在のバージョン："+APP_VERSION;
+ const btn=document.createElement("button");btn.type="button";btn.id="appUpdateButton";btn.className="action gold";btn.textContent="更新を確認";btn.style.cssText="min-height:48px;width:100%;";
+ btn.addEventListener("click",checkAppUpdate);
+ const status=document.createElement("p");status.id="appUpdateStatus";status.setAttribute("role","status");status.textContent="画像・音声などの登録データは削除しません。";status.style.marginTop="8px";
+ section.append(title,version,btn,status);panel.append(section);
+}
+if("serviceWorker" in navigator){
+ let refreshing=false;
+ navigator.serviceWorker.addEventListener("controllerchange",()=>{
+  if(refreshing)return;
+  refreshing=true;
+  location.reload();
+ });
+ window.addEventListener("load",async()=>{
+  addAppUpdateUI();
+  try{
+   const reg=await navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"});
+   appWorkerRegistration=reg;
+   if(reg.waiting)showUpdateReady();
+   reg.addEventListener("updatefound",()=>{
+    const worker=reg.installing;
+    if(worker)worker.addEventListener("statechange",()=>{
+     if(worker.state==="installed"&&navigator.serviceWorker.controller)showUpdateReady();
+    });
+   });
+   await reg.update();
+  }catch(e){showAppUpdateStatus("更新管理の確認に失敗しました")}
+ });
+}else window.addEventListener("load",addAppUpdateUI);
+
 (async()=>{try{await getLocalTriggerImages();for(let i=1;i<=3;i++){await mediaUrl("persona-image-"+i);await mediaUrl("persona-audio-"+i)}await mediaUrl("trigger-audio");await mediaUrl("trigger-audio-2");await mediaUrl("trigger-audio-3");if(navigator.storage&&navigator.storage.persist){try{await navigator.storage.persist()}catch(e){}}}catch(e){console.warn("Local trigger image storage unavailable",e)}render();renderDeckManager();renderLocalTriggerImageSettings();renderSettings();showPowerPage();renderTriggerQuickButtons()})();
 
 

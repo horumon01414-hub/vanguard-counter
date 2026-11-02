@@ -1,3 +1,4 @@
-Vanguard Fight Tool v39
-v38をベースに、アルカナ移動後の回転、ターン管理トリガーの取り消し、先攻初回エネルギー通知抑止、一人回しを追加。
-ZIPを解凍し、6ファイルを本番用GitHub Pagesリポジトリ直下にアップロードしてください。
+Vanguard Fight Tool v40
+v39の機能を維持し、設定タブにバージョン表示・更新確認ボタンを追加。
+Service Workerをネットワーク優先・オフライン代替に変更。IndexedDBとlocalStorageは削除しません。
+更新の初回適用には新バージョンの読み込みが必要です。古いService Workerの挙動により初回更新が遅れる場合があります。
