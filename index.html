@@ -99,6 +99,18 @@ html[data-theme="light"] :is(.field input,.field textarea,.toolbar input)::place
 html[data-theme="light"] #settingsPanel :is(h2,h3){color:#000}
 html[data-theme="light"] .item.tarot-maxed{border-color:#785014}
 /* Keep the persona-ride full-screen animation visually unchanged. */
+
+/* v43: one-row horizontally scrollable, always-visible navigation */
+.main-tabs{
+ position:sticky;top:env(safe-area-inset-top,0px);z-index:100;
+ display:flex;flex-wrap:nowrap;grid-template-columns:none;gap:8px;
+ overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+ -webkit-overflow-scrolling:touch;scrollbar-width:none;
+ background:var(--bg);padding:9px 2px 10px;margin:0 0 14px;
+ border-bottom:1px solid var(--line);
+}
+.main-tabs::-webkit-scrollbar{display:none}
+.main-tabs button{flex:0 0 auto;min-width:90px;min-height:44px;white-space:nowrap;touch-action:manipulation}
 </style>
 <script>
 (function(){try{var mode=localStorage.getItem("vft-appearance-v37")==="light"?"light":"dark";document.documentElement.dataset.theme=mode;var meta=document.getElementById("appThemeColor");if(meta)meta.content=mode==="light"?"#ffffff":"#090909";}catch(e){document.documentElement.dataset.theme="dark";}})();
@@ -384,7 +396,7 @@ const arcanaRotationChanges=new Map();
 async function renderArcanaImage(title,name){const url=await mediaUrl("arcana-"+(settings.arcanaVariant||"p34")+"-"+name);if(url&&title.isConnected){const img=document.createElement("img");img.src=url;img.className="arcana-mini";const count=state.counts[state.player][name]||0;const angle=Math.max(0,Math.min(3,count)-1)*90;img.style.transform="rotate("+angle+"deg)";title.prepend(img);const key=state.player+"|"+name;const previous=arcanaRotationChanges.get(key);if(previous!==undefined){arcanaRotationChanges.delete(key);const start=Math.max(0,Math.min(3,previous)-1)*90;if(start!==angle&&img.animate){img.style.transform="rotate("+start+"deg)";const animateRotation=()=>{if(!img.isConnected)return;const animation=img.animate([{transform:"rotate("+start+"deg)"},{transform:"rotate("+angle+"deg)"}],{duration:420,easing:"ease-in-out",fill:"forwards"});animation.onfinish=()=>{img.style.transform="rotate("+angle+"deg)";animation.cancel()}};if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){img.style.transform="rotate("+angle+"deg)"}else setTimeout(animateRotation,510)}}}}
 
 
-const APP_VERSION="v42";
+const APP_VERSION="v43";
 let appWorkerRegistration=null;
 let appUpdateReady=false;
 function showAppUpdateStatus(message){const el=document.getElementById("appUpdateStatus");if(el)el.textContent=message}
@@ -470,5 +482,16 @@ if("serviceWorker" in navigator){
   try{localStorage.setItem("vft-appearance-v37",mode)}catch(e){}
  });
 })();
+
+// v43: keep selected tab in view horizontally (do not move page vertically).
+document.querySelectorAll(".main-tabs button").forEach(button=>{
+ button.addEventListener("click",()=>{
+  const strip=button.parentElement;
+  const left=button.offsetLeft-strip.offsetLeft;
+  const right=left+button.offsetWidth;
+  if(left<strip.scrollLeft)strip.scrollTo({left:Math.max(0,left-8),behavior:"smooth"});
+  else if(right>strip.scrollLeft+strip.clientWidth)strip.scrollTo({left:right-strip.clientWidth+8,behavior:"smooth"});
+ });
+});
 </script>
 </body></html>
