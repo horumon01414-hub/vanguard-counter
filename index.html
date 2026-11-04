@@ -157,7 +157,7 @@ html[data-theme="light"] .energy-card{background:#eaf5fa}html[data-theme="light"
 .trigger-audio-shortcut{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:10px;border:1px solid #665232;border-radius:11px;margin:12px 0}.trigger-audio-shortcut label{font-size:12px;color:var(--gold)}.trigger-audio-shortcut select{width:100%;min-width:0;margin-top:5px;padding:9px;background:#171512;color:#fff;border:1px solid #80673c;border-radius:8px}
 .sound-set-card{border:1px solid #765f3b;border-radius:12px;padding:12px;margin:12px 0;background:#161410}.sound-assignment{padding:9px 0;border-top:1px solid #4c4030}.sound-assignment label{display:flex;align-items:center;gap:9px;padding:5px}.sound-assignment input{width:19px;height:19px}.sound-library-entry{padding:10px;border:1px solid #54432b;border-radius:9px;margin:8px 0}.sound-library-entry input[type=text]{max-width:100%;background:#171512;color:white;padding:9px;border:1px solid #6c5835;border-radius:7px}
 html[data-theme="light"] :is(.settings-menu button,.sound-set-card,.sound-library-entry){background:#fff;color:#111}
-</style>
+.sound-set-header{display:flex;justify-content:space-between;align-items:center;gap:10px}.sound-manager{max-height:55vh;overflow-y:auto;padding:8px;border:1px solid #665232;border-radius:10px;margin:10px 0}.sound-assignment>div:not(.panel-hidden){max-height:220px;overflow-y:auto}.sound-set-card .panel-hidden,.sound-manager.panel-hidden{display:none!important}\n</style>
 <script>
 (function(){try{var mode=localStorage.getItem("vft-appearance-v37")==="light"?"light":"dark";document.documentElement.dataset.theme=mode;var meta=document.getElementById("appThemeColor");if(meta)meta.content=mode==="light"?"#ffffff":"#090909";}catch(e){document.documentElement.dataset.theme="dark";}})();
 </script>
@@ -557,45 +557,89 @@ function settingsMenuInit(){
  });
  $("settingsBack").onclick=openSettingsHome;
 }
+// Keep all groups in their original parent. Moving nodes between pages used to
+// make hidden settings content appear in the wrong page after repeated navigation.
 function openSettingsHome(){
- $("settingsSubPage").classList.add("panel-hidden");$("settingsHome").classList.remove("panel-hidden");$("settingsGeneral").classList.remove("panel-hidden");
- ["settingsPersonaGroup","settingsEnergyGroup","settingsTriggerGroup","settingsArcanaGroup"].forEach(id=>$(id).classList.add("panel-hidden"));
+ $("settingsSubPage").classList.add("panel-hidden");
+ $("settingsHome").classList.remove("panel-hidden");
+ $("settingsGeneral").classList.remove("panel-hidden");
+ for(const id of ["settingsPersonaGroup","settingsEnergyGroup","settingsTriggerGroup","settingsArcanaGroup"])$(id).classList.add("panel-hidden");
+ for(const id of ["settingsPersonaGroup","settingsEnergyGroup","settingsTriggerGroup","settingsArcanaGroup"])$("settingsGeneral").append($(id));
+ $("settingsSubContent").replaceChildren();
 }
 function openSettingsSub(title,id){
- $("settingsHome").classList.add("panel-hidden");$("settingsGeneral").classList.add("panel-hidden");$("settingsSubPage").classList.remove("panel-hidden");
- $("settingsSubTitle").textContent=title;const target=$(id);target.classList.remove("panel-hidden");$("settingsSubContent").replaceChildren(target);window.scrollTo({top:0,behavior:"smooth"});
+ const group=$(id),container=$("settingsSubContent");
+ if(!group||!container)return;
+ for(const key of ["settingsPersonaGroup","settingsEnergyGroup","settingsTriggerGroup","settingsArcanaGroup"])$(key).classList.add("panel-hidden");
+ $("settingsHome").classList.add("panel-hidden");
+ $("settingsGeneral").classList.add("panel-hidden");
+ $("settingsSubTitle").textContent=title;
+ // Explicitly move only the requested group; do not let stale page content remain.
+ container.replaceChildren(group);
+ group.classList.remove("panel-hidden");
+ $("settingsSubPage").classList.remove("panel-hidden");
+ $("settingsPanel").scrollIntoView({block:"start",behavior:"instant"});
 }
 function renderTriggerAdvancedSettings(){
  const root=$("triggerAdvancedSettings");if(!root)return;root.innerHTML="";
- const head=document.createElement("h3");head.textContent="個別音声ライブラリ";root.append(head);
- const note=document.createElement("p");note.className="note";note.textContent="音声を登録した後、各セットの☆・引・治・前・超に割り当てます。未設定の種類は無音です。";root.append(note);
  const library=soundLibrary(),sets=soundSets();
- for(const item of library){
-  const row=document.createElement("div");row.className="sound-library-entry";
-  const name=document.createElement("input");name.type="text";name.value=item.name;name.setAttribute("aria-label","音声名");name.onchange=()=>{item.name=name.value.trim()||"音声";saveSettings();renderTriggerAdvancedSettings()};row.append(name);
-  const play=document.createElement("button");play.type="button";play.className="action";play.textContent="▶ 試聴";play.onclick=()=>playStoredAudio(soundKey(item.id),Number(settings.triggerVolume??1));row.append(play);
-  const del=document.createElement("button");del.type="button";del.className="action";del.textContent="削除";del.onclick=async()=>{if(!confirm("この音声をライブラリと全セットから削除しますか？"))return;await mediaDelete(soundKey(item.id));if(mediaUrls[soundKey(item.id)])URL.revokeObjectURL(mediaUrls[soundKey(item.id)]);delete mediaUrls[soundKey(item.id)];settings.triggerSoundLibrary=library.filter(x=>x.id!==item.id);sets.forEach(set=>TRIGGER_KINDS.forEach(k=>set.assignments[k]=(set.assignments[k]||[]).filter(id=>id!==item.id)));saveSettings();renderTriggerAdvancedSettings()};row.append(del);root.append(row)
+ const heading=document.createElement("h3");heading.textContent="音声ライブラリ";root.append(heading);
+ const info=document.createElement("p");info.className="note";info.textContent="音声を登録し、「変更」から名前・試聴・削除を管理できます。セットへの割り当ても「変更」から行います。";root.append(info);
+ const upload=document.createElement("input");upload.type="file";upload.accept="audio/*,.mp3";upload.hidden=true;
+ const add=document.createElement("button");add.type="button";add.className="action gold";add.textContent="＋ 音声を1つ登録";add.onclick=()=>upload.click();
+ upload.onchange=async()=>{const f=upload.files?.[0];if(!f)return;if(f.size>12*1024*1024){alert("12MB以下の音声ファイルを選択してください");return}if(!f.type.startsWith("audio/")&&!/\\.mp3$/i.test(f.name)){alert("音声ファイルを選択してください");return}const id=newSoundId();try{await mediaPut(soundKey(id),f);await mediaUrl(soundKey(id));library.push({id,name:f.name.replace(/\\.[^.]+$/,"")});saveSettings();renderTriggerAdvancedSettings()}catch(e){alert("保存に失敗しました。空き容量をご確認ください")}};
+ root.append(add,upload);
+ const count=document.createElement("p");count.className="note";count.textContent="登録済み音声："+library.length+"件";root.append(count);
+ const edit=document.createElement("button");edit.type="button";edit.className="action";edit.textContent="変更（音声の管理）";root.append(edit);
+ const manager=document.createElement("div");manager.className="panel-hidden sound-manager";root.append(manager);
+ edit.onclick=()=>{const opening=manager.classList.contains("panel-hidden");manager.classList.toggle("panel-hidden",!opening);edit.textContent=opening?"閉じる（音声の管理）":"変更（音声の管理）";if(opening)drawLibraryManager()};
+ function drawLibraryManager(){
+  manager.innerHTML="";
+  if(!library.length){manager.textContent="音声はまだ登録されていません";return}
+  for(const item of library){
+   const row=document.createElement("div");row.className="sound-library-entry";
+   const name=document.createElement("input");name.type="text";name.value=item.name;name.setAttribute("aria-label","音声名");name.onchange=()=>{item.name=name.value.trim()||"音声";saveSettings()};row.append(name);
+   const play=document.createElement("button");play.type="button";play.className="action";play.textContent="▶ 試聴";play.onclick=()=>playStoredAudio(soundKey(item.id),Number(settings.triggerVolume??1));row.append(play);
+   const del=document.createElement("button");del.type="button";del.className="action";del.textContent="削除";del.onclick=async()=>{if(!confirm("この音声をライブラリと全セットから削除しますか？"))return;await mediaDelete(soundKey(item.id));if(mediaUrls[soundKey(item.id)])URL.revokeObjectURL(mediaUrls[soundKey(item.id)]);delete mediaUrls[soundKey(item.id)];settings.triggerSoundLibrary=library.filter(x=>x.id!==item.id);sets.forEach(set=>TRIGGER_KINDS.forEach(k=>set.assignments[k]=(set.assignments[k]||[]).filter(id=>id!==item.id)));saveSettings();renderTriggerAdvancedSettings()};row.append(del);manager.append(row)
+  }
  }
- const file=document.createElement("input");file.type="file";file.accept="audio/*,.mp3";file.hidden=true;
- const add=document.createElement("button");add.type="button";add.className="action gold";add.textContent="＋ 音声を1つ登録";add.onclick=()=>file.click();
- file.onchange=async()=>{const f=file.files?.[0];if(!f)return;if(f.size>12*1024*1024){alert("12MB以下の音声ファイルを選択してください");return}if(!f.type.startsWith("audio/")&&!/\.mp3$/i.test(f.name)){alert("音声ファイルを選択してください");return}const id=newSoundId();try{await mediaPut(soundKey(id),f);await mediaUrl(soundKey(id));library.push({id,name:f.name.replace(/\.[^.]+$/,"")});saveSettings();renderTriggerAdvancedSettings()}catch(e){alert("保存に失敗しました。空き容量をご確認ください")}};
- root.append(add,file);
  const h=document.createElement("h3");h.textContent="個別音声セット";root.append(h);
- for(const set of sets){
-  if(!set.assignments)set.assignments={};const card=document.createElement("div");card.className="sound-set-card";
-  const title=document.createElement("input");title.type="text";title.value=set.name;title.setAttribute("aria-label","セット名");title.onchange=()=>{set.name=title.value.trim()||"無題のセット";saveSettings();fillTriggerSoundSelectors()};card.append(title);
-  const del=document.createElement("button");del.type="button";del.className="action";del.textContent="セットを削除";del.onclick=()=>{if(!confirm("このセットを削除しますか？（ライブラリ音声は残ります）"))return;settings.triggerSoundSets=sets.filter(x=>x.id!==set.id);saveSettings();renderTriggerAdvancedSettings();fillTriggerSoundSelectors()};card.append(del);
-  for(const kind of TRIGGER_KINDS){const group=document.createElement("div");group.className="sound-assignment";const heading=document.createElement("h4");heading.textContent=kind+"トリガー";group.append(heading);
-   if(!library.length){const empty=document.createElement("p");empty.className="note";empty.textContent="ライブラリに音声を登録してください";group.append(empty)}
-   library.forEach(item=>{const label=document.createElement("label");const check=document.createElement("input");check.type="checkbox";check.checked=(set.assignments[kind]||[]).includes(item.id);check.onchange=()=>{const selected=new Set(set.assignments[kind]||[]);if(check.checked)selected.add(item.id);else selected.delete(item.id);set.assignments[kind]=[...selected];saveSettings()};label.append(check,document.createTextNode(item.name));group.append(label)});card.append(group)
-  }root.append(card)
- }
  const addSet=document.createElement("button");addSet.type="button";addSet.className="action gold";addSet.textContent="＋ 音声セットを追加";addSet.onclick=()=>{const name=prompt("新しい音声セットの名前","新しいセット");if(name===null)return;const id=newSoundId();sets.push({id,name:name.trim()||"新しいセット",assignments:{}});settings.triggerSoundSetId=id;saveSettings();renderTriggerAdvancedSettings();fillTriggerSoundSelectors()};root.append(addSet);
+ const note=document.createElement("p");note.className="note";note.textContent="各セットの「変更」から、登録済み音声をトリガーごとに割り当てます。未設定のトリガーは無音です。";root.append(note);
+ for(const set of sets){
+  if(!set.assignments)set.assignments={};
+  const card=document.createElement("div");card.className="sound-set-card";
+  const top=document.createElement("div");top.className="sound-set-header";
+  const name=document.createElement("strong");name.textContent=set.name;top.append(name);
+  const change=document.createElement("button");change.type="button";change.className="action";change.textContent="変更";top.append(change);card.append(top);
+  const details=document.createElement("div");details.className="panel-hidden";card.append(details);
+  change.onclick=()=>{const opening=details.classList.contains("panel-hidden");details.classList.toggle("panel-hidden",!opening);change.textContent=opening?"閉じる":"変更";if(opening)drawSetEditor()};
+  function drawSetEditor(){
+   details.innerHTML="";
+   const title=document.createElement("input");title.type="text";title.value=set.name;title.setAttribute("aria-label","セット名");title.onchange=()=>{set.name=title.value.trim()||"無題のセット";name.textContent=set.name;saveSettings();fillTriggerSoundSelectors()};details.append(title);
+   const del=document.createElement("button");del.type="button";del.className="action";del.textContent="セットを削除";del.onclick=()=>{if(!confirm("このセットを削除しますか？（ライブラリ音声は残ります）"))return;settings.triggerSoundSets=sets.filter(x=>x.id!==set.id);saveSettings();renderTriggerAdvancedSettings();fillTriggerSoundSelectors()};details.append(del);
+   for(const kind of TRIGGER_KINDS){
+    const group=document.createElement("div");group.className="sound-assignment";
+    const label=document.createElement("h4");label.textContent=kind+"トリガー";group.append(label);
+    const chosen=(set.assignments[kind]||[]).filter(id=>library.some(x=>x.id===id));
+    const toggle=document.createElement("button");toggle.type="button";toggle.className="action";toggle.textContent="変更（"+chosen.length+"件選択中）";group.append(toggle);
+    const choices=document.createElement("div");choices.className="panel-hidden";group.append(choices);
+    toggle.onclick=()=>{const opening=choices.classList.contains("panel-hidden");choices.classList.toggle("panel-hidden",!opening);if(opening)drawChoices()};
+    function drawChoices(){
+     choices.innerHTML="";
+     if(!library.length){choices.textContent="先に音声を登録してください";return}
+     for(const item of library){const label=document.createElement("label");const check=document.createElement("input");check.type="checkbox";check.checked=(set.assignments[kind]||[]).includes(item.id);check.onchange=()=>{const selected=new Set(set.assignments[kind]||[]);if(check.checked)selected.add(item.id);else selected.delete(item.id);set.assignments[kind]=[...selected];toggle.textContent="変更（"+selected.size+"件選択中）";saveSettings()};label.append(check,document.createTextNode(item.name));choices.append(label)}
+    }
+    details.append(group)
+   }
+  }
+  root.append(card)
+ }
  fillTriggerSoundSelectors()
 }
 settingsMenuInit();openSettingsHome();fillTriggerSoundSelectors();
 
-const APP_VERSION="v52";
+const APP_VERSION="v53";
 let appWorkerRegistration=null;
 let appUpdateReady=false;
 function showAppUpdateStatus(message){const el=document.getElementById("appUpdateStatus");if(el)el.textContent=message}
