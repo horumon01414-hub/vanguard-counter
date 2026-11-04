@@ -16,3 +16,5 @@ ZIPを解凍し、6ファイルを本番用GitHubリポジトリにアップロ�
 [v46] Fix: clear super-trigger +100 million display on turn end, even if it is the only modified value.
 
 [v47] エネルギー自分・相手に−3ボタン追加。操作履歴・1つ戻すに対応。
+
+[v48] 設定からエネルギーカウンター画像を登録・変更・削除。画像は端末内に保存され、自分と相手に共通適用。未登録時は標準の結晶を表示。
