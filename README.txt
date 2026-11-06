@@ -36,3 +36,6 @@ ZIPを解凍し、6ファイルを本番用GitHubリポジトリにアップロ�
 既存の vc-state / vc-settings-v34 / vc-media-v34 を維持します。GitHubにアップロードする前に既存データのバックアップを推奨します。
 
 Update v55.1: fixed solo field grid, solo attack declaration, coin toss and solo exit.
+
+
+v55.3: ソロ開始方法選択・コイントス先後自動決定・手動選択・相手Vドライブチェックボタン・守備ログ非表示。
