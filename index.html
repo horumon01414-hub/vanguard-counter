@@ -681,7 +681,7 @@ function renderTriggerAdvancedSettings(){
 }
 settingsMenuInit();openSettingsHome();fillTriggerSoundSelectors();
 
-const APP_VERSION="v55.4";
+const APP_VERSION="v55.5";
 let appWorkerRegistration=null;
 let appUpdateReady=false;
 function showAppUpdateStatus(message){const el=document.getElementById("appUpdateStatus");if(el)el.textContent=message}
@@ -840,7 +840,7 @@ const v551RenderSettings=renderSettings;
 renderSettings=async function(){await v551RenderSettings();await refreshCoinFace()};
 
 
-// v55.4: solo start is a two-step choice, with optional coin toss.
+// v55.5: solo start is a two-step choice, with optional coin toss.
 const soloStartBtn=$('soloFightControl'),soloCoinBtn=$('soloCoinButton'),soloManual=$('soloManualStart');
 soloCoinBtn.style.display='none';
 soloStartBtn.onclick=()=>{if(state.fight.startedAt){toast('進行中のファイトを終了してから開始してください');return}const visible=soloManual.classList.toggle('visible');soloCoinBtn.style.display=visible?'block':'none';soloStartBtn.textContent=visible?'開始方法を閉じる':'1人回し開始'};
@@ -888,5 +888,69 @@ renderSolo=function(){v553RenderSolo();const s=state.solo,root=$('soloDefense');
   }
  }
 };
+
+// v55.5: repair solo attack feedback, manual damage, and normal fight completion.
+const v555OriginalFinish = v551FinishNormal;
+$('finish').onclick = function(){
+ if(state.fight?.solo){finishSoloOnly();return;}
+ if(!state.fight?.startedAt){toast('ファイトを開始してください');return;}
+ // Keep the original result dialog and its match-record saving handlers.
+ v555OriginalFinish();
+};
+function v555SoloAttackPower(pos){
+ const f=state.powerUnits['my-front-'+pos]||{};
+ const b=state.powerUnits['my-back-'+pos]||{};
+ const front=Number(f.base??13000)+Number(f.power||0)+Number(f.special||0)*100000000;
+ const rear=Number(b.base??13000)+Number(b.power||0)+Number(b.special||0)*100000000;
+ return front+(f.boost?rear:0);
+}
+soloAttackPower=v555SoloAttackPower;
+soloPlayerAttack=function(pos){
+ if(!state.fight?.solo||!state.fight?.startedAt){toast('先に1人回しを開始してください');return;}
+ if(state.fight.currentPlayer!=='自分'){toast('現在は相手のターンです');return;}
+ const s=state.solo;
+ const id='my-front-'+pos,u=state.powerUnits[id]||{};
+ const power=soloAttackPower(pos),crit=Math.max(1,Number(u.crit)||1);
+ s.lastPlayerAttack={pos,power,crit,boost:!!u.boost};
+ s.log='自分 '+pos+'列の攻撃：'+power.toLocaleString('ja-JP')+' / ☆'+crit+'。相手へのダメージは下のボタンで記録してください。';
+ save();renderSolo();renderPower();
+};
+function v555AdjustDamage(side,delta){
+ if(!state.fight?.solo){toast('1人回し中に使用してください');return;}
+ const s=state.solo;
+ s.damage[side]=Math.min(6,Math.max(0,Number(s.damage[side]||0)+delta));
+ save();renderSolo();
+}
+const v555RenderSolo=renderSolo;
+renderSolo=function(){
+ v555RenderSolo();
+ const s=state.solo,status=$('soloStatus');
+ if(!status)return;
+ let extra=$('soloManualDamage');
+ if(!extra){extra=document.createElement('section');extra.id='soloManualDamage';extra.style.cssText='margin:12px 0;padding:12px;border:1px solid #9a7838;border-radius:12px';status.after(extra)}
+ extra.replaceChildren();
+ if(!state.fight?.solo){extra.style.display='none';return}
+ extra.style.display='block';
+ const turn=document.createElement('p');turn.style.fontWeight='bold';turn.textContent='ファイト進行：'+state.fight.currentPlayer+' '+(state.fight.turns?.[state.fight.currentPlayer]||1)+'ターン目（自分 '+(state.fight.turns?.自分||0)+' / 相手 '+(state.fight.turns?.相手||0)+'）';extra.append(turn);
+ if(state.fight.currentPlayer==='自分'){
+  const attack=document.createElement('p');attack.style.whiteSpace='normal';attack.textContent=s.lastPlayerAttack?'直前のアタック：'+s.lastPlayerAttack.pos+'列 / '+s.lastPlayerAttack.power.toLocaleString('ja-JP')+' / ☆'+s.lastPlayerAttack.crit+(s.lastPlayerAttack.boost?'（ブーストあり）':''):'前列の「アタック」を押すと攻撃力を表示します';extra.append(attack);
+ }
+ for(const side of ['自分','相手']){
+  const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px';
+  const label=document.createElement('span');label.textContent=side+'ダメージ：'+s.damage[side]+' / 6';label.style.flex='1';row.append(label);
+  for(const [symbol,delta] of [['−',-1],['＋',1]]){const b=document.createElement('button');b.type='button';b.className='action';b.textContent=symbol;b.style.cssText='min-width:48px;padding:8px';b.onclick=()=>v555AdjustDamage(side,delta);row.append(b)}
+  extra.append(row);
+ }
+ const note=document.createElement('p');note.className='note';note.textContent='ガードの判断は手動です。ダメージが発生したときだけ＋／−で調整してください。';extra.append(note);
+ // Solo attack results are visible only during the player's turn.
+ if(state.fight.currentPlayer==='自分'&&s.lastPlayerAttack)$('soloLog').textContent=s.log||'';
+};
+const v555OriginalTurnChanged=soloTurnChanged;
+soloTurnChanged=function(next){v555OriginalTurnChanged(next);if(next==='自分'){state.solo.lastPlayerAttack=null;save()}renderSolo()};
+// A boost toggle is never a separate power modification: it only changes the calculated attack.
+const v555RenderPower=renderPower;
+renderPower=function(){v555RenderPower();if(!soloTabVisible)return;document.querySelectorAll('.solo-boost-button').forEach(btn=>{btn.title='同じ列の後列ユニットの合計パワーを攻撃に加算します'})};
+renderSolo();
+
 </script>
 </body></html>
