@@ -38,4 +38,4 @@ ZIPを解凍し、6ファイルを本番用GitHubリポジトリにアップロ�
 Update v55.1: fixed solo field grid, solo attack declaration, coin toss and solo exit.
 
 
-v55.3: ソロ開始方法選択・コイントス先後自動決定・手動選択・相手Vドライブチェックボタン・守備ログ非表示。
+v55.4: ソロ開始方法選択・コイントス先後自動決定・手動選択・相手Vドライブチェックボタン・守備ログ非表示。

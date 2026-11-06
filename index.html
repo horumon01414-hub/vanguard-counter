@@ -186,57 +186,6 @@ body.solo-view #fightProgressPanel{display:none!important}
 </style>
 <script>
 (function(){try{var mode=localStorage.getItem("vft-appearance-v37")==="light"?"light":"dark";document.documentElement.dataset.theme=mode;var meta=document.getElementById("appThemeColor");if(meta)meta.content=mode==="light"?"#ffffff":"#090909";}catch(e){document.documentElement.dataset.theme="dark";}})();
-
-
-// v55.3: solo start is a two-step choice, with optional coin toss.
-const soloStartBtn=$('soloFightControl'),soloCoinBtn=$('soloCoinButton'),soloManual=$('soloManualStart');
-soloCoinBtn.style.display='none';
-soloStartBtn.onclick=()=>{if(state.fight.startedAt){toast('進行中のファイトを終了してから開始してください');return}const visible=soloManual.classList.toggle('visible');soloCoinBtn.style.display=visible?'block':'none';soloStartBtn.textContent=visible?'開始方法を閉じる':'1人回し開始'};
-function soloBeginFromChoice(first){requestedSoloFight=true;beginFight(first);if(state.fight.solo){soloManual.classList.remove('visible');soloCoinBtn.style.display='none';soloStartBtn.textContent='1人回し開始';}}
-$('soloStartFirst').onclick=()=>soloBeginFromChoice(true);
-$('soloStartSecond').onclick=()=>soloBeginFromChoice(false);
-let soloCoinPending=false;
-soloCoinBtn.onclick=()=>{soloCoinPending=true;coinOpen();$('coinResult').textContent='表＝自分が先攻 / 裏＝自分が後攻'};
-const originalNormalCoinOpen=$('normalCoinButton').onclick;
-$('normalCoinButton').onclick=()=>{soloCoinPending=false;originalNormalCoinOpen()};
-const oldCoinToss=coinToss;
-coinToss=function(){if(coinBusy)return;const isSolo=soloCoinPending;const head=Math.random()<.5;coinBusy=true;const body=$('coinBody');const current=((coinRotation%360)+360)%360,target=head?0:180;coinRotation+=1800+(target-current+360)%360;body.classList.add('tossing');$('coinResult').textContent='回転中…';$('coinTossAgain').disabled=true;requestAnimationFrame(()=>{body.style.transform='rotateY('+coinRotation+'deg)'});setTimeout(()=>{coinBusy=false;$('coinTossAgain').disabled=false;$('coinResult').textContent=head?'表（V）':'裏（無地）';if(isSolo){soloCoinPending=false;$('coinDialog').classList.remove('open');soloBeginFromChoice(head);toast(head?'表：自分が先攻':'裏：自分が後攻')}},2300)};
-$('coinTossAgain').onclick=()=>coinToss();
-const oldCoinClose=$('coinClose').onclick;
-$('coinClose').onclick=()=>{soloCoinPending=false;oldCoinClose()};
-// Hide only the normal fight progression section on the solo tab.
-const normalProgressHeading=[...document.querySelectorAll('.history-head')].find(x=>x.textContent.includes('ファイト進行'));
-const normalProgressBlock=normalProgressHeading?.closest('.history');
-if(normalProgressBlock)normalProgressBlock.id='fightProgressPanel';
-const oldPowerTabClick=$('powerPage').onclick,oldSoloTabClick=$('soloPage').onclick;
-$('powerPage').onclick=()=>{document.body.classList.remove('solo-view');oldPowerTabClick()};
-$('soloPage').onclick=()=>{document.body.classList.add('solo-view');oldSoloTabClick()};
-// The opposing Vanguard drive check is a deliberate, visible action. It is
-// completed before the player's guard selection; no hidden automatic rolls.
-function soloDriveCount(){const f=state.fight;return (f.turns?.[f.firstPlayer]||0)>=3?2:1}
-function soloDoDrive(){const s=state.solo,a=s.queue[s.index];if(!a||!a.v||!s.attackRevealed)return;const count=soloDriveCount();s.driveResults=[];for(let i=0;i<count;i++){const tr=soloRollTrigger();s.driveResults.push(tr||'トリガーなし');if(tr==='☆'){a.crit++;a.power+=10000}else if(tr==='前'){a.power+=10000;s.queue.slice(s.index+1).forEach(x=>x.power+=10000)}else if(tr==='超'){a.power+=100000000;s.queue.slice(s.index+1).forEach(x=>x.power+=100000000)}else if(tr){a.power+=10000}}s.driveDone=true;save();renderSolo()}
-const v553TurnChanged=soloTurnChanged;
-soloTurnChanged=function(next){v553TurnChanged(next);state.solo.driveDone=false;state.solo.driveResults=[];save();renderSolo()};
-const v553SoloGuardBase=v551SoloGuard;
-soloGuard=function(choice){const s=state.solo,a=s.queue[s.index];if(!s.attackRevealed){toast('先に相手のアタックを押してください');return}if(a?.v&&!s.driveDone){toast('先にドライブチェックを行ってください');return}
- // The original guard routine also rolls drive checks automatically. Prevent
- // double checks by temporarily treating the already-checked attack as R.
- const wasV=a?.v;if(a)a.v=false;
- try{v553SoloGuardBase(choice)}finally{if(a)a.v=wasV}
- s.attackRevealed=false;s.driveDone=false;s.driveResults=[];s.log='';save();renderSolo()};
-const v553RenderSolo=renderSolo;
-renderSolo=function(){v553RenderSolo();const s=state.solo,root=$('soloDefense');if(!root)return;
- if(state.fight.solo&&state.fight.currentPlayer==='相手'){
-  $('soloLog').textContent='';const a=s.queue[s.index];if(a&&s.attackRevealed){
-   const title=root.querySelector('h3');if(title)title.textContent='相手の攻撃 '+(s.index+1)+' / '+s.queue.length+'：'+(a.v?'V':'R')+'　'+a.power.toLocaleString('ja-JP')+' ☆'+a.crit;
-   if(a.v){const drive=document.createElement('button');drive.className='action gold solo-next-attack';drive.textContent='ドライブチェック（'+soloDriveCount()+'回）';drive.disabled=!!s.driveDone;drive.onclick=soloDoDrive;root.insertBefore(drive,root.querySelector('button'));
-    if(s.driveDone){const result=document.createElement('div');result.className='solo-drive-results';result.textContent='ドライブ結果：'+s.driveResults.join(' / ');drive.after(result)}
-    root.querySelectorAll('button').forEach(b=>{if(b!==drive)b.disabled=!s.driveDone});
-   }
-  }
- }
-};
-
 </script>
 </head>
 <body>
@@ -732,7 +681,7 @@ function renderTriggerAdvancedSettings(){
 }
 settingsMenuInit();openSettingsHome();fillTriggerSoundSelectors();
 
-const APP_VERSION="v55.3";
+const APP_VERSION="v55.4";
 let appWorkerRegistration=null;
 let appUpdateReady=false;
 function showAppUpdateStatus(message){const el=document.getElementById("appUpdateStatus");if(el)el.textContent=message}
@@ -891,7 +840,7 @@ const v551RenderSettings=renderSettings;
 renderSettings=async function(){await v551RenderSettings();await refreshCoinFace()};
 
 
-// v55.3: solo start is a two-step choice, with optional coin toss.
+// v55.4: solo start is a two-step choice, with optional coin toss.
 const soloStartBtn=$('soloFightControl'),soloCoinBtn=$('soloCoinButton'),soloManual=$('soloManualStart');
 soloCoinBtn.style.display='none';
 soloStartBtn.onclick=()=>{if(state.fight.startedAt){toast('進行中のファイトを終了してから開始してください');return}const visible=soloManual.classList.toggle('visible');soloCoinBtn.style.display=visible?'block':'none';soloStartBtn.textContent=visible?'開始方法を閉じる':'1人回し開始'};
@@ -939,6 +888,5 @@ renderSolo=function(){v553RenderSolo();const s=state.solo,root=$('soloDefense');
   }
  }
 };
-
 </script>
 </body></html>
