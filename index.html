@@ -159,7 +159,7 @@ html[data-theme="light"] .energy-card{background:#eaf5fa}html[data-theme="light"
 html[data-theme="light"] :is(.settings-menu button,.sound-set-card,.sound-library-entry){background:#fff;color:#111}
 .sound-set-header{display:flex;justify-content:space-between;align-items:center;gap:10px}.sound-manager{max-height:55vh;overflow-y:auto;padding:8px;border:1px solid #665232;border-radius:10px;margin:10px 0}.sound-assignment>div:not(.panel-hidden){max-height:220px;overflow-y:auto}.sound-set-card .panel-hidden,.sound-manager.panel-hidden{display:none!important}\n#soloWorkbench .action{margin:4px;min-height:43px}.solo-actions{display:flex;flex-wrap:wrap}.solo-slot-controls{display:flex;flex-direction:column;gap:4px;min-width:0}.solo-slot-controls select{width:100%;font-size:12px;background:#171717;color:#fff;border:1px solid #8c7143;border-radius:6px;padding:5px}.solo-slot-controls .action{font-size:11px;padding:6px 1px;min-height:34px}.slot-base,.slot-total{display:block;font-size:10px;color:#dfbb78}#soloDefense .action{margin:4px}#soloTriggerSettings{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}#soloTriggerSettings input{max-width:70px;background:#171717;color:white;padding:8px;border:1px solid #777} 
 
-/* v55.1 field layout fix: one grid cell per unit */
+/* v55.2 field layout fix: one grid cell per unit */
 .power-row{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:7px}
 .solo-unit-column{min-width:0;display:flex;flex-direction:column;gap:5px}
 .solo-unit-column>.power-slot{width:100%;flex:1;min-width:0}
@@ -182,45 +182,6 @@ html[data-theme="light"] :is(.settings-menu button,.sound-set-card,.sound-librar
 <script>
 (function(){try{var mode=localStorage.getItem("vft-appearance-v37")==="light"?"light":"dark";document.documentElement.dataset.theme=mode;var meta=document.getElementById("appThemeColor");if(meta)meta.content=mode==="light"?"#ffffff":"#090909";}catch(e){document.documentElement.dataset.theme="dark";}})();
 
-// v55.1: isolate solo unit controls inside existing six field cells.
-const v551OpenUnit=openUnit;
-openUnit=function(id,label){v551OpenUnit(id,label);const picker=$('soloUnitBasePicker');const select=$('soloUnitBaseSelect');if(!picker||!select)return;picker.classList.toggle('panel-hidden',!soloTabVisible);if(soloTabVisible)select.value=String(state.powerUnits[id]?.base||13000)};
-$('soloUnitBaseSelect').onchange=()=>{if(!selectedPowerUnit)return;const u=state.powerUnits[selectedPowerUnit];if(!u)return;u.base=Number($('soloUnitBaseSelect').value);save();renderPower();renderUnitDialog()};
-// Expose the next virtual attack only when the user explicitly declares it.
-const v551SoloTurnChanged=soloTurnChanged;
-soloTurnChanged=function(next){v551SoloTurnChanged(next);if(next==='相手'){state.solo.attackRevealed=false;save();renderSolo()}};
-const v551SoloGuard=soloGuard;
-soloGuard=function(choice){if(!state.solo.attackRevealed){toast('先に相手のアタックを押してください');return}v551SoloGuard(choice);state.solo.attackRevealed=false;save();renderSolo()};
-const v551RenderSolo=renderSolo;
-renderSolo=function(){v551RenderSolo();const s=state.solo,root=$('soloDefense');if(!root)return;
- if(state.fight.solo&&state.fight.currentPlayer==='相手'&&s.queue[s.index]){
-   const a=s.queue[s.index],head=root.querySelector('h3'),note=root.querySelector('p');
-   const buttons=[...root.querySelectorAll('button')];
-   if(!s.attackRevealed){if(head)head.textContent='相手の攻撃待機中：'+(s.index+1)+' / '+s.queue.length+'回';if(note)note.textContent='「相手のアタック」を押すと、攻撃パワーと攻撃ユニットを表示します。';buttons.forEach(b=>b.hidden=true);
-     const next=document.createElement('button');next.type='button';next.className='action gold solo-next-attack';next.textContent='相手のアタック（'+(s.index+1)+' / '+s.queue.length+'回）';next.onclick=()=>{s.attackRevealed=true;save();renderSolo()};root.append(next);
-   }else{if(head)head.textContent='相手の攻撃 '+(s.index+1)+' / '+s.queue.length+'：'+(a.v?'ヴァンガード（V）':'リアガード（R）')+'　'+a.power.toLocaleString('ja-JP')+'　☆'+a.crit;}
- }
-};
-// Solo fight end never creates a match history record.
-function finishSoloOnly(){if(!state.fight.solo||!state.fight.startedAt){toast('1人回しは開始されていません');return}if(!confirm('1人回しを終了しますか？\n対戦記録は保存しません。'))return;
- state.fight={startedAt:null,elapsedMs:0,paused:false,solo:false,firstPlayer:null,currentPlayer:null,turns:{自分:0,相手:0},deckName:state.fight.deckName};
- state.solo=soloFresh();try{const cfg=JSON.parse(localStorage.getItem(soloSettingsKey));if(cfg){state.solo.triggers=cfg.triggers||state.solo.triggers;state.solo.over=cfg.over||state.solo.over}}catch(e){}
- state.status='未開始';state.energy={自分:0,相手:0};state.energyUndo=[];state.orderUsed={自分:false,相手:false};state.personaRide={self:false,opponent:false};state.superEffects={gorma:false,lyrical:false};state.superUsed=false;state.counts={自分:fresh(),相手:fresh()};state.history=[];
- powerRows.forEach(r=>powerPositions.forEach(pos=>{const u=state.powerUnits[r.id+'-'+pos];if(u){u.power=0;u.crit=1;u.special=0;u.effect=false;u.effectMemo='';u.boost=false}}));save();render();renderPower();renderTurnStatus();renderEnergy();toast('1人回しを終了しました')}
-$('soloFinishButton').onclick=finishSoloOnly;
-$('soloTurnEnd').onclick=()=>{$('turnEnd').click()};
-const v551FinishNormal=$('finish').onclick;
-$('finish').onclick=()=>{if(state.fight.solo){finishSoloOnly();return}v551FinishNormal()};
-// The default coin face is a stylized V; custom face is in existing IndexedDB.
-let coinRotation=0,coinBusy=false;
-async function refreshCoinFace(){const root=$('coinFront');if(!root)return;const url=await mediaUrl('coin-face-image-v55').catch(()=>null);root.replaceChildren();if(url){const img=document.createElement('img');img.src=url;img.alt='コインの表';root.append(img)}else{const span=document.createElement('span');span.textContent='V';root.append(span)}}
-function coinOpen(){const d=$('coinDialog');d.classList.add('open');$('coinResult').textContent='コインを投げてください';refreshCoinFace()}
-function coinToss(){if(coinBusy)return;coinBusy=true;const head=Math.random()<0.5;const body=$('coinBody');const currentFace=((coinRotation%360)+360)%360;const targetFace=head?0:180;const adjustment=(targetFace-currentFace+360)%360;const end=coinRotation+1800+adjustment;coinRotation=end;body.classList.add('tossing');$('coinResult').textContent='回転中…';$('coinTossAgain').disabled=true;requestAnimationFrame(()=>{body.style.transform='rotateY('+end+'deg)'});setTimeout(()=>{coinBusy=false;$('coinTossAgain').disabled=false;$('coinResult').textContent=head?'表（V）':'裏（無地）'},2300)}
-$('normalCoinButton').onclick=coinOpen;$('soloCoinButton').onclick=coinOpen;$('coinTossAgain').onclick=coinToss;$('coinClose').onclick=()=>$('coinDialog').classList.remove('open');
-$('coinDialog').onclick=e=>{if(e.target===$('coinDialog')&&!coinBusy)$('coinDialog').classList.remove('open')};
-// The settings image uploader uses the same media database and deletion UI.
-const v551RenderSettings=renderSettings;
-renderSettings=async function(){await v551RenderSettings();await refreshCoinFace()};
 </script>
 </head>
 <body>
@@ -428,7 +389,7 @@ slotWrap.append(b);
 if(soloTabVisible&&row.side==="自分"&&row.row==="前列"){
  const boost=document.createElement("button");boost.type="button";boost.className="action solo-boost-button"+(u.boost?" gold":"");boost.textContent=u.boost?"ブースト ON":"ブースト OFF";boost.onclick=()=>{u.boost=!u.boost;save();renderPower()};slotWrap.append(boost);
 }
-grid.append(slotWrap)}});rowsWrap.append(grid)});fieldWrap.append(rowsWrap);const resetBar=document.createElement("div");resetBar.className="reset-actions field-reset-actions";const undoBtn=document.createElement("button");undoBtn.className="action";undoBtn.textContent="1個戻る";undoBtn.onclick=()=>undoPower("field",field.side);const resetBtn=document.createElement("button");resetBtn.className="action danger";resetBtn.textContent="全てリセット";resetBtn.onclick=()=>resetField(field.side);resetBar.append(undoBtn,resetBtn);fieldWrap.append(resetBar);if(!soloTabVisible&&field.side==="相手"&&$("normalFieldSelect").value==="self")fieldWrap.style.display="none";board.append(fieldWrap)});renderTriggerQuickButtons();if(soloTabVisible)renderSolo()}
+grid.append(slotWrap)});rowsWrap.append(grid)});fieldWrap.append(rowsWrap);const resetBar=document.createElement("div");resetBar.className="reset-actions field-reset-actions";const undoBtn=document.createElement("button");undoBtn.className="action";undoBtn.textContent="1個戻る";undoBtn.onclick=()=>undoPower("field",field.side);const resetBtn=document.createElement("button");resetBtn.className="action danger";resetBtn.textContent="全てリセット";resetBtn.onclick=()=>resetField(field.side);resetBar.append(undoBtn,resetBtn);fieldWrap.append(resetBar);if(!soloTabVisible&&field.side==="相手"&&$("normalFieldSelect").value==="self")fieldWrap.style.display="none";board.append(fieldWrap)});renderTriggerQuickButtons();if(soloTabVisible)renderSolo()}
 function recordPower(id,label,detail,before){state.powerHistory.push({id,label,detail,before});if(state.powerHistory.length>200)state.powerHistory.shift();savePower();renderPower();if(selectedPowerUnit===id)renderUnitDialog()}
 function pushPowerHistory(entry){state.powerHistory.push(entry);if(state.powerHistory.length>300)state.powerHistory.shift();savePower()}
 function undoPower(scope,side){let idx=-1;for(let i=state.powerHistory.length-1;i>=0;i--){const h=state.powerHistory[i];const ids=h.type==="batch"?h.ids:[h.id];if(!ids)continue;if(scope==="unit"&&ids.includes(selectedPowerUnit)){idx=i;break}if(scope==="field"&&ids.some(id=>id.startsWith(side==="自分"?"my-":"opp-"))){idx=i;break}}if(idx<0){toast("戻せる操作がありません");return}const h=state.powerHistory.splice(idx,1)[0],ids=h.type==="batch"?h.ids:[h.id];ids.forEach(id=>{if(h.before?.[id])state.powerUnits[id]={...h.before[id]};else if(id===h.id&&h.before)state.powerUnits[id]={...h.before}});savePower();renderPower();if(selectedPowerUnit)renderUnitDialog();toast("直前の操作を1つ戻しました")}
@@ -716,7 +677,7 @@ function renderTriggerAdvancedSettings(){
 }
 settingsMenuInit();openSettingsHome();fillTriggerSoundSelectors();
 
-const APP_VERSION="v55.1";
+const APP_VERSION="v55.2";
 let appWorkerRegistration=null;
 let appUpdateReady=false;
 function showAppUpdateStatus(message){const el=document.getElementById("appUpdateStatus");if(el)el.textContent=message}
@@ -832,6 +793,47 @@ function soloGuard(choice){const s=state.solo;const a=s.queue[s.index];if(!a)ret
 function soloRaid(n){if(!state.fight.solo||state.fight.currentPlayer!=='自分'){toast('自分のターンに使用してください');return}state.solo.raids=state.solo.raids===n?0:n;state.solo.log='リアへのアタック '+state.solo.raids+'（次の相手ターンの抽選下限を変更）';save();renderSolo()}
 function renderSolo(){const s=state.solo;const status=$('soloStatus');if(!status)return;status.innerHTML='<p>自分 '+s.damage.自分+' / 6点　｜　相手 '+s.damage.相手+' / 6点</p><p>完全ガード残り '+s.pg+' / 4　｜　相手ガード '+s.guardSpent.toLocaleString('ja-JP')+' / '+s.guardCap.toLocaleString('ja-JP')+'</p>';const acts=$('soloAttackButtons');acts.innerHTML='';const active=state.fight.solo&&state.fight.currentPlayer==='自分';for(const n of [1,2]){const b=document.createElement('button');b.className='action'+(s.raids===n?' gold':'');b.textContent='リアにアタック'+n+(s.raids===n?' ✓':'');b.disabled=!active;b.onclick=()=>soloRaid(n);acts.append(b)}const def=$('soloDefense');def.innerHTML='';if(state.fight.solo&&state.fight.currentPlayer==='相手'){const a=s.queue[s.index];if(a){const title=document.createElement('h3');title.textContent='相手の攻撃 '+(s.index+1)+' / '+s.queue.length+'：'+(a.v?'V':'R')+'　'+a.power.toLocaleString('ja-JP')+' ☆'+a.crit;def.append(title);const note=document.createElement('p');note.className='note';note.textContent='自分Vの基本パワー（参考）：'+soloEnemyBase().toLocaleString('ja-JP');def.append(note);for(const choice of (a.v?['ノーガード','ガード','＋10000ガード','完全ガード']:['ノーガード','ガード'])){const b=document.createElement('button');b.className='action';b.textContent=choice;b.onclick=()=>soloGuard(choice);def.append(b)}}else def.textContent='相手の攻撃は終了しました。ターン終了を押してください。'}$('soloLog').textContent=s.log||'1人回しを開始してください';const root=$('soloTriggerSettings');if(root&&!root.childElementCount){for(const kind of ['☆','前','治','引','超']){const lab=document.createElement('label');lab.className='field';lab.textContent=kind+' ';const inp=document.createElement('input');inp.type='number';inp.min=0;inp.max=kind==='超'?1:16;inp.dataset.soloKind=kind;lab.append(inp);root.append(lab)}}if(root)root.querySelectorAll('input').forEach(i=>{if(document.activeElement!==i)i.value=s.triggers[i.dataset.soloKind]||0});const over=$('soloOverChoice');if(over&&document.activeElement!==over)over.value=s.over}
 $('soloSaveSettings').onclick=()=>{const counts={};let sum=0;document.querySelectorAll('#soloTriggerSettings input').forEach(i=>{counts[i.dataset.soloKind]=Math.max(0,Math.trunc(Number(i.value)||0));sum+=counts[i.dataset.soloKind]});if(sum!==16||counts['超']>1){toast('合計16枚・超は最大1枚にしてください');return}state.solo.triggers=counts;state.solo.over=$('soloOverChoice').value;localStorage.setItem(soloSettingsKey,JSON.stringify({triggers:counts,over:state.solo.over}));save();toast('仮想相手の設定を保存しました')};
+
+
+// v55.2: isolate solo unit controls inside existing six field cells.
+const v551OpenUnit=openUnit;
+openUnit=function(id,label){v551OpenUnit(id,label);const picker=$('soloUnitBasePicker');const select=$('soloUnitBaseSelect');if(!picker||!select)return;picker.classList.toggle('panel-hidden',!soloTabVisible);if(soloTabVisible)select.value=String(state.powerUnits[id]?.base||13000)};
+$('soloUnitBaseSelect').onchange=()=>{if(!selectedPowerUnit)return;const u=state.powerUnits[selectedPowerUnit];if(!u)return;u.base=Number($('soloUnitBaseSelect').value);save();renderPower();renderUnitDialog()};
+// Expose the next virtual attack only when the user explicitly declares it.
+const v551SoloTurnChanged=soloTurnChanged;
+soloTurnChanged=function(next){v551SoloTurnChanged(next);if(next==='相手'){state.solo.attackRevealed=false;save();renderSolo()}};
+const v551SoloGuard=soloGuard;
+soloGuard=function(choice){if(!state.solo.attackRevealed){toast('先に相手のアタックを押してください');return}v551SoloGuard(choice);state.solo.attackRevealed=false;save();renderSolo()};
+const v551RenderSolo=renderSolo;
+renderSolo=function(){v551RenderSolo();const s=state.solo,root=$('soloDefense');if(!root)return;
+ if(state.fight.solo&&state.fight.currentPlayer==='相手'&&s.queue[s.index]){
+   const a=s.queue[s.index],head=root.querySelector('h3'),note=root.querySelector('p');
+   const buttons=[...root.querySelectorAll('button')];
+   if(!s.attackRevealed){if(head)head.textContent='相手の攻撃待機中：'+(s.index+1)+' / '+s.queue.length+'回';if(note)note.textContent='「相手のアタック」を押すと、攻撃パワーと攻撃ユニットを表示します。';buttons.forEach(b=>b.hidden=true);
+     const next=document.createElement('button');next.type='button';next.className='action gold solo-next-attack';next.textContent='相手のアタック（'+(s.index+1)+' / '+s.queue.length+'回）';next.onclick=()=>{s.attackRevealed=true;save();renderSolo()};root.append(next);
+   }else{if(head)head.textContent='相手の攻撃 '+(s.index+1)+' / '+s.queue.length+'：'+(a.v?'ヴァンガード（V）':'リアガード（R）')+'　'+a.power.toLocaleString('ja-JP')+'　☆'+a.crit;}
+ }
+};
+// Solo fight end never creates a match history record.
+function finishSoloOnly(){if(!state.fight.solo||!state.fight.startedAt){toast('1人回しは開始されていません');return}if(!confirm('1人回しを終了しますか？\n対戦記録は保存しません。'))return;
+ state.fight={startedAt:null,elapsedMs:0,paused:false,solo:false,firstPlayer:null,currentPlayer:null,turns:{自分:0,相手:0},deckName:state.fight.deckName};
+ state.solo=soloFresh();try{const cfg=JSON.parse(localStorage.getItem(soloSettingsKey));if(cfg){state.solo.triggers=cfg.triggers||state.solo.triggers;state.solo.over=cfg.over||state.solo.over}}catch(e){}
+ state.status='未開始';state.energy={自分:0,相手:0};state.energyUndo=[];state.orderUsed={自分:false,相手:false};state.personaRide={self:false,opponent:false};state.superEffects={gorma:false,lyrical:false};state.superUsed=false;state.counts={自分:fresh(),相手:fresh()};state.history=[];
+ powerRows.forEach(r=>powerPositions.forEach(pos=>{const u=state.powerUnits[r.id+'-'+pos];if(u){u.power=0;u.crit=1;u.special=0;u.effect=false;u.effectMemo='';u.boost=false}}));save();render();renderPower();renderTurnStatus();renderEnergy();toast('1人回しを終了しました')}
+$('soloFinishButton').onclick=finishSoloOnly;
+$('soloTurnEnd').onclick=()=>{$('turnEnd').click()};
+const v551FinishNormal=$('finish').onclick;
+$('finish').onclick=()=>{if(state.fight.solo){finishSoloOnly();return}v551FinishNormal()};
+// The default coin face is a stylized V; custom face is in existing IndexedDB.
+let coinRotation=0,coinBusy=false;
+async function refreshCoinFace(){const root=$('coinFront');if(!root)return;const url=await mediaUrl('coin-face-image-v55').catch(()=>null);root.replaceChildren();if(url){const img=document.createElement('img');img.src=url;img.alt='コインの表';root.append(img)}else{const span=document.createElement('span');span.textContent='V';root.append(span)}}
+function coinOpen(){const d=$('coinDialog');d.classList.add('open');$('coinResult').textContent='コインを投げてください';refreshCoinFace()}
+function coinToss(){if(coinBusy)return;coinBusy=true;const head=Math.random()<0.5;const body=$('coinBody');const currentFace=((coinRotation%360)+360)%360;const targetFace=head?0:180;const adjustment=(targetFace-currentFace+360)%360;const end=coinRotation+1800+adjustment;coinRotation=end;body.classList.add('tossing');$('coinResult').textContent='回転中…';$('coinTossAgain').disabled=true;requestAnimationFrame(()=>{body.style.transform='rotateY('+end+'deg)'});setTimeout(()=>{coinBusy=false;$('coinTossAgain').disabled=false;$('coinResult').textContent=head?'表（V）':'裏（無地）'},2300)}
+$('normalCoinButton').onclick=coinOpen;$('soloCoinButton').onclick=coinOpen;$('coinTossAgain').onclick=coinToss;$('coinClose').onclick=()=>$('coinDialog').classList.remove('open');
+$('coinDialog').onclick=e=>{if(e.target===$('coinDialog')&&!coinBusy)$('coinDialog').classList.remove('open')};
+// The settings image uploader uses the same media database and deletion UI.
+const v551RenderSettings=renderSettings;
+renderSettings=async function(){await v551RenderSettings();await refreshCoinFace()};
 
 </script>
 </body></html>
