@@ -183,6 +183,14 @@ body.solo-view #fightProgressPanel{display:none!important}
 .solo-start-options{display:none;gap:8px;grid-template-columns:1fr 1fr;margin:10px 0}
 .solo-start-options.visible{display:grid}
 .solo-drive-results{border:1px solid #aa8541;border-radius:12px;padding:12px;margin:10px 0;color:#e5c478;font-weight:700}
+
+/* v55.6 solo attack resolution */
+#soloAttackDialog{z-index:9999}#soloAttackDialog .dialog-card{max-width:430px;max-height:85vh;overflow:auto;text-align:left}
+.solo-resolve-title{color:var(--gold);font-weight:900;font-size:20px;margin:8px 0}
+.solo-resolve-summary{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;line-height:1.8}
+.solo-resolve-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.solo-resolve-choices button{min-height:48px}
+.solo-resolve-highlight{font-size:22px;font-weight:900;color:var(--gold);padding:10px 0}
 </style>
 <script>
 (function(){try{var mode=localStorage.getItem("vft-appearance-v37")==="light"?"light":"dark";document.documentElement.dataset.theme=mode;var meta=document.getElementById("appThemeColor");if(meta)meta.content=mode==="light"?"#ffffff":"#090909";}catch(e){document.documentElement.dataset.theme="dark";}})();
@@ -250,7 +258,7 @@ body.solo-view #fightProgressPanel{display:none!important}
   </section>
  </div>
  <p class="note" id="counterNote">数値はこのiPhone内に自動保存されます。Safariでホーム画面に追加すると、アプリのように起動できます。ファイト終了時はファイト中の数値・履歴・効果状態をリセットし、デッキ登録と対戦記録は保持します。</p>
-</main><div class="result-dialog" id="coinDialog"><div class="dialog-card coin-dialog-card"><h3>コイントス</h3><div class="coin-scene"><div class="coin-body" id="coinBody"><div class="coin-face coin-front" id="coinFront"><span>V</span></div><div class="coin-face coin-back"></div></div></div><div id="coinResult" class="coin-result" aria-live="polite">コインを投げてください</div><button class="action gold" id="coinTossAgain" type="button" style="width:100%">コイントス</button><button class="dialog-cancel" id="coinClose" type="button">閉じる</button></div></div><div class="result-dialog" id="startFightDialog"><div class="dialog-card"><h3>ファイト開始</h3><p>自分は先攻・後攻のどちらですか？</p><div class="result-buttons" style="grid-template-columns:1fr 1fr"><button id="chooseFirst">先攻</button><button id="chooseSecond">後攻</button></div><button class="dialog-cancel" id="cancelStartFight">キャンセル</button></div></div><div class="result-dialog" id="resultDialog"><div class="dialog-card"><h3>対戦結果を記録</h3><p>自分から見た今回の結果を選択してください。</p><label class="field"><span>自分のデッキ名（自動入力・編集可）</span><input id="myDeckName" placeholder="自分のデッキ名"></label><label class="field"><span>相手のデッキ名</span><input id="opponentDeck" placeholder="例：○○デッキ"></label><div class="result-buttons" style="grid-template-columns:repeat(2,1fr)"><button data-result="勝ち">勝ち</button><button data-result="負け">負け</button><button data-result="引き分け">引き分け</button><button data-result="中断">中断</button></div><button class="dialog-cancel" id="cancelResult">キャンセル</button></div></div><div class="result-dialog" id="unitDialog"><div class="dialog-card unit-dialog-card"><h3 id="unitDialogTitle">V（ヴァンガード）</h3><div id="soloUnitBasePicker" class="panel-hidden" style="margin:8px 0 12px"><label class="field">基本パワー<select id="soloUnitBaseSelect"><option value="8000">8,000</option><option value="10000">10,000</option><option value="13000">13,000</option></select></label></div><div class="unit-values"><section><div class="unit-label">パワー増減</div><strong id="unitPowerValue">±0</strong><button class="action gold" id="applyPower" style="width:100%;margin:10px 0">決定</button><div class="preset-grid" id="powerPresets"></div><label class="field"><span>直接入力（増減後の値）</span><input id="powerDirect" type="number" step="1000" placeholder="例：10000 または -5000"></label></section><section><div class="unit-label">クリティカル</div><strong id="unitCritValue">☆1</strong><div class="crit-controls"><button class="action" id="critMinus">−</button><button class="action primary" id="critPlus">＋</button></div><div class="effect-section" id="effectSection"><button class="effect-toggle" id="effectToggle" type="button">効果付与：OFF</button><div class="effect-memo"><div class="unit-label" style="margin:8px 0">効果付与メモ</div><textarea id="effectMemo" placeholder="付与した効果をメモ"></textarea></div></div></section></div><div class="reset-actions"><button class="action" id="unitUndo">1個戻る</button><button class="action danger" id="unitResetAll">全てリセット</button></div><button class="dialog-cancel" id="closeUnitDialog">閉じる</button></div></div><div class="result-dialog" id="energyReminderDialog"><div class="dialog-card"><h3>エネルギーチャージ確認</h3><p style="line-height:1.7">自分のターン開始時に<br><strong style="color:var(--gold);font-size:22px">エネルギーを3チャージ</strong><br>してください！</p><button class="action primary" id="closeEnergyReminder" style="width:100%">確認しました</button></div></div><div id="personaEffect"><span>PERSONA RIDE!!</span></div><div class="toast" id="toast"></div>
+</main><div class="result-dialog" id="soloAttackDialog" role="dialog" aria-modal="true" aria-labelledby="soloAttackDialogTitle"><div class="dialog-card"><h3 id="soloAttackDialogTitle">アタック処理</h3><div id="soloAttackDialogBody" aria-live="polite"></div><button class="dialog-cancel" id="soloAttackDialogClose" type="button">閉じる</button></div></div><div class="result-dialog" id="coinDialog"><div class="dialog-card coin-dialog-card"><h3>コイントス</h3><div class="coin-scene"><div class="coin-body" id="coinBody"><div class="coin-face coin-front" id="coinFront"><span>V</span></div><div class="coin-face coin-back"></div></div></div><div id="coinResult" class="coin-result" aria-live="polite">コインを投げてください</div><button class="action gold" id="coinTossAgain" type="button" style="width:100%">コイントス</button><button class="dialog-cancel" id="coinClose" type="button">閉じる</button></div></div><div class="result-dialog" id="startFightDialog"><div class="dialog-card"><h3>ファイト開始</h3><p>自分は先攻・後攻のどちらですか？</p><div class="result-buttons" style="grid-template-columns:1fr 1fr"><button id="chooseFirst">先攻</button><button id="chooseSecond">後攻</button></div><button class="dialog-cancel" id="cancelStartFight">キャンセル</button></div></div><div class="result-dialog" id="resultDialog"><div class="dialog-card"><h3>対戦結果を記録</h3><p>自分から見た今回の結果を選択してください。</p><label class="field"><span>自分のデッキ名（自動入力・編集可）</span><input id="myDeckName" placeholder="自分のデッキ名"></label><label class="field"><span>相手のデッキ名</span><input id="opponentDeck" placeholder="例：○○デッキ"></label><div class="result-buttons" style="grid-template-columns:repeat(2,1fr)"><button data-result="勝ち">勝ち</button><button data-result="負け">負け</button><button data-result="引き分け">引き分け</button><button data-result="中断">中断</button></div><button class="dialog-cancel" id="cancelResult">キャンセル</button></div></div><div class="result-dialog" id="unitDialog"><div class="dialog-card unit-dialog-card"><h3 id="unitDialogTitle">V（ヴァンガード）</h3><div id="soloUnitBasePicker" class="panel-hidden" style="margin:8px 0 12px"><label class="field">基本パワー<select id="soloUnitBaseSelect"><option value="8000">8,000</option><option value="10000">10,000</option><option value="13000">13,000</option></select></label></div><div class="unit-values"><section><div class="unit-label">パワー増減</div><strong id="unitPowerValue">±0</strong><button class="action gold" id="applyPower" style="width:100%;margin:10px 0">決定</button><div class="preset-grid" id="powerPresets"></div><label class="field"><span>直接入力（増減後の値）</span><input id="powerDirect" type="number" step="1000" placeholder="例：10000 または -5000"></label></section><section><div class="unit-label">クリティカル</div><strong id="unitCritValue">☆1</strong><div class="crit-controls"><button class="action" id="critMinus">−</button><button class="action primary" id="critPlus">＋</button></div><div class="effect-section" id="effectSection"><button class="effect-toggle" id="effectToggle" type="button">効果付与：OFF</button><div class="effect-memo"><div class="unit-label" style="margin:8px 0">効果付与メモ</div><textarea id="effectMemo" placeholder="付与した効果をメモ"></textarea></div></div></section></div><div class="reset-actions"><button class="action" id="unitUndo">1個戻る</button><button class="action danger" id="unitResetAll">全てリセット</button></div><button class="dialog-cancel" id="closeUnitDialog">閉じる</button></div></div><div class="result-dialog" id="energyReminderDialog"><div class="dialog-card"><h3>エネルギーチャージ確認</h3><p style="line-height:1.7">自分のターン開始時に<br><strong style="color:var(--gold);font-size:22px">エネルギーを3チャージ</strong><br>してください！</p><button class="action primary" id="closeEnergyReminder" style="width:100%">確認しました</button></div></div><div id="personaEffect"><span>PERSONA RIDE!!</span></div><div class="toast" id="toast"></div>
 <script>
 const groups=[
  {id:"trigger",title:"TRIGGERS / トリガー",items:["☆トリガー","治トリガー","引トリガー","前トリガー","超トリガー"]},
@@ -681,7 +689,7 @@ function renderTriggerAdvancedSettings(){
 }
 settingsMenuInit();openSettingsHome();fillTriggerSoundSelectors();
 
-const APP_VERSION="v55.5";
+const APP_VERSION="v55.6";
 let appWorkerRegistration=null;
 let appUpdateReady=false;
 function showAppUpdateStatus(message){const el=document.getElementById("appUpdateStatus");if(el)el.textContent=message}
@@ -840,7 +848,7 @@ const v551RenderSettings=renderSettings;
 renderSettings=async function(){await v551RenderSettings();await refreshCoinFace()};
 
 
-// v55.5: solo start is a two-step choice, with optional coin toss.
+// v55.6: solo start is a two-step choice, with optional coin toss.
 const soloStartBtn=$('soloFightControl'),soloCoinBtn=$('soloCoinButton'),soloManual=$('soloManualStart');
 soloCoinBtn.style.display='none';
 soloStartBtn.onclick=()=>{if(state.fight.startedAt){toast('進行中のファイトを終了してから開始してください');return}const visible=soloManual.classList.toggle('visible');soloCoinBtn.style.display=visible?'block':'none';soloStartBtn.textContent=visible?'開始方法を閉じる':'1人回し開始'};
@@ -889,7 +897,7 @@ renderSolo=function(){v553RenderSolo();const s=state.solo,root=$('soloDefense');
  }
 };
 
-// v55.5: repair solo attack feedback, manual damage, and normal fight completion.
+// v55.6: repair solo attack feedback, manual damage, and normal fight completion.
 const v555OriginalFinish = v551FinishNormal;
 $('finish').onclick = function(){
  if(state.fight?.solo){finishSoloOnly();return;}
@@ -951,6 +959,83 @@ soloTurnChanged=function(next){v555OriginalTurnChanged(next);if(next==='自分')
 const v555RenderPower=renderPower;
 renderPower=function(){v555RenderPower();if(!soloTabVisible)return;document.querySelectorAll('.solo-boost-button').forEach(btn=>{btn.title='同じ列の後列ユニットの合計パワーを攻撃に加算します'})};
 renderSolo();
+
+
+// v55.6: resolve each player attack in one readable, sequential dialog.
+(function(){
+ const dialog=document.getElementById('soloAttackDialog');
+ const body=document.getElementById('soloAttackDialogBody');
+ const close=document.getElementById('soloAttackDialogClose');
+ let context=null;
+ const label=n=>Number(n).toLocaleString('ja-JP');
+ const elem=(tag,content,cls)=>{const e=document.createElement(tag);if(content!==undefined)e.textContent=content;if(cls)e.className=cls;return e};
+ const action=(text,fn)=>{const b=elem('button',text,'action');b.type='button';b.onclick=fn;return b};
+ const renderStep=(title,description)=>{body.replaceChildren();body.append(elem('div',title,'solo-resolve-title'));if(description)body.append(elem('p',description,'note'))};
+ const dismiss=()=>{dialog.classList.remove('show');dialog.classList.remove('active');dialog.style.display='none';context=null;renderSolo()};
+ close.onclick=dismiss;
+ const open=()=>{dialog.style.display='flex';dialog.classList.add('show');dialog.classList.add('active')};
+ function complete(){
+  const s=state.solo,c=context;
+  if(!c)return;
+  const result=c.outcome==='damage'?'ダメージ '+c.damageCount+'点'+(c.triggers.length?' / '+c.triggers.map((t,i)=>(i+1)+'枚目 '+(t||'トリガーなし')).join(' / '):''):
+    c.outcome==='guard'?'通常ガード（必要値 '+label(c.need)+'）':c.outcome==='pg'?'完全ガード':'攻撃不成立';
+  s.lastPlayerAttack={pos:c.pos,power:c.power,crit:c.crit,boost:c.boost,result};
+  s.log='自分 '+c.pos+'列：'+label(c.power)+' ☆'+c.crit+' → '+result;
+  save();renderSolo();renderPower();
+  renderStep('アタック処理完了','結果を確認して閉じてください。');
+  body.append(elem('div',result,'solo-resolve-highlight'));
+  body.append(action('完了',dismiss));
+ }
+ function nextDamage(){
+  const c=context,s=state.solo;
+  if(!c)return;
+  if(c.damageCount>=c.crit||s.damage.相手>=6){complete();return}
+  s.damage.相手=Math.min(6,s.damage.相手+1);c.damageCount++;
+  const tr=soloRollTrigger();c.triggers.push(tr);
+  if(tr==='治'&&s.damage.相手>s.damage.自分)s.damage.相手=Math.max(0,s.damage.相手-1);
+  if(tr==='超')s.oppVBonus=(s.oppVBonus||0)+100000000;
+  else if(tr)s.oppVBonus=(s.oppVBonus||0)+10000;
+  save();renderSolo();
+  renderStep('ダメージチェック '+c.damageCount+' / '+c.crit,'仮想相手のダメージチェック結果');
+  body.append(elem('div',tr?'トリガー '+tr:'トリガーなし','solo-resolve-highlight'));
+  if(tr==='治')body.append(elem('p','ヒールの条件を満たす場合はダメージを1点回復します。','note'));
+  body.append(elem('p','相手ダメージ：'+s.damage.相手+' / 6'));
+  body.append(action(c.damageCount<c.crit&&s.damage.相手<6?'次のダメージチェック':'結果を確認',()=>nextDamage()));
+ }
+ function choose(outcome){
+  if(!context)return;
+  context.outcome=outcome;
+  if(outcome==='damage')nextDamage();else complete();
+ }
+ soloPlayerAttack=function(pos){
+  if(!state.fight?.solo||!state.fight?.startedAt){toast('先に1人回しを開始してください');return}
+  if(state.fight.currentPlayer!=='自分'){toast('現在は相手のターンです');return}
+  const u=state.powerUnits['my-front-'+pos]||{};
+  const power=soloAttackPower(pos),crit=Math.max(1,Number(u.crit)||1);
+  const base=soloEnemyBase()+(state.solo.oppVBonus||0);
+  const need=power>=base?(Math.floor((power-base)/5000)+1)*5000:0;
+  context={pos,power,crit,boost:!!u.boost,base,need,outcome:null,damageCount:0,triggers:[]};
+  renderStep('自分 '+pos+'列のアタック','ガード方法を選んで、攻撃結果を記録します。');
+  const summary=elem('div',undefined,'solo-resolve-summary');
+  summary.append(elem('div','攻撃パワー：'+label(power)));
+  summary.append(elem('div','クリティカル：☆'+crit));
+  summary.append(elem('div','ブースト：'+(u.boost?'あり':'なし')));
+  summary.append(elem('div','相手Vパワー：'+label(base)));
+  summary.append(elem('div','必要ガード値：'+label(need)));
+  body.append(summary);
+  const choices=elem('div',undefined,'solo-resolve-choices');
+  if(power>=base){
+   choices.append(action('ノーガード',()=>choose('damage')));
+   choices.append(action('通常ガード',()=>choose('guard')));
+   choices.append(action('完全ガード',()=>choose('pg')));
+  }else{
+   body.append(elem('p','相手Vのパワーに届かないため、この攻撃ではダメージが発生しません。','note'));
+  }
+  choices.append(action('攻撃不成立',()=>choose('miss')));
+  body.append(choices);
+  open();
+ };
+})();
 
 </script>
 </body></html>
