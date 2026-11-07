@@ -1,3 +1,6 @@
+Vanguard Fight Tool v55.7
+相手前列アタックボタン・ポップアップ式ドライブチェック・攻撃進捗表示。
+
 Vanguard Fight Tool v41 — Apple Music音声共存テスト版
 v40の全機能を維持し、Audio Session APIのambientモードを効果音再生前に設定します。
 設定タブから「BGMとの同時再生を優先」「従来の再生方式」を選択できます。

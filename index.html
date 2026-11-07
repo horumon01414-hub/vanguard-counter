@@ -184,7 +184,8 @@ body.solo-view #fightProgressPanel{display:none!important}
 .solo-start-options.visible{display:grid}
 .solo-drive-results{border:1px solid #aa8541;border-radius:12px;padding:12px;margin:10px 0;color:#e5c478;font-weight:700}
 
-/* v55.6 solo attack resolution */
+/* v55.7 solo attack resolution */
+.solo-enemy-progress{margin:7px 0 12px;padding:10px;border:1px solid #ad8c49;border-radius:10px;color:#e8c77c;text-align:center;font-weight:800;font-size:17px}.solo-enemy-attack:disabled{opacity:.35}
 #soloAttackDialog{z-index:9999}#soloAttackDialog .dialog-card{max-width:430px;max-height:85vh;overflow:auto;text-align:left}
 .solo-resolve-title{color:var(--gold);font-weight:900;font-size:20px;margin:8px 0}
 .solo-resolve-summary{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;line-height:1.8}
@@ -239,7 +240,7 @@ body.solo-view #fightProgressPanel{display:none!important}
    </div>
    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="action gold" id="startFightControl">ファイト開始</button><button class="action" id="turnEnd">ターン終了</button></div><button class="action coin-launch" id="normalCoinButton" type="button">コイントス</button>
   </div>
-  <div id="soloWorkbench" class="history panel-hidden" style="margin:12px 0"><div class="solo-top-actions"><button class="action gold" id="soloFightControl" type="button">1人回し開始</button><button class="action" id="soloCoinButton" type="button">コイントスで先攻・後攻を決める</button><div class="solo-start-options" id="soloManualStart"><button class="action" id="soloStartFirst" type="button">先攻で開始</button><button class="action" id="soloStartSecond" type="button">後攻で開始</button></div><button class="action danger" id="soloFinishButton" type="button">1人回し終了</button><button class="action" id="soloTurnEnd" type="button">ターン終了</button></div><h3 style="color:var(--gold)">1人回し・仮想相手（v55試作）</h3><p class="note">攻撃する前列ユニットの「アタック」を押すと、現在の基本パワー・増減値・ブーストを読み取って自動判定します。</p><div id="soloStatus"></div><div id="soloAttackButtons" class="solo-actions"></div><div id="soloDefense"></div><div id="soloLog" class="note" aria-live="polite"></div><details style="margin-top:12px"><summary>仮想相手のトリガー設定（合計16枚）</summary><div id="soloTriggerSettings"></div><label class="field">超トリガー<select id="soloOverChoice"><option>焼尽の精霊王 ヴァルナート</option><option>イナズマブレイク!!!</option><option>その他</option></select></label><button class="action" id="soloSaveSettings">設定を保存</button></details></div><label id="normalFieldDisplay" class="field">表示フィールド<select id="normalFieldSelect"><option value="both">自分・相手</option><option value="self">自分のみ</option></select></label><div class="power-board" id="powerBoard"></div>
+  <div id="soloWorkbench" class="history panel-hidden" style="margin:12px 0"><div class="solo-top-actions"><button class="action gold" id="soloFightControl" type="button">1人回し開始</button><button class="action" id="soloCoinButton" type="button">コイントスで先攻・後攻を決める</button><div class="solo-start-options" id="soloManualStart"><button class="action" id="soloStartFirst" type="button">先攻で開始</button><button class="action" id="soloStartSecond" type="button">後攻で開始</button></div><button class="action danger" id="soloFinishButton" type="button">1人回し終了</button><button class="action" id="soloTurnEnd" type="button">ターン終了</button></div><h3 style="color:var(--gold)">1人回し・仮想相手（v55.7）</h3><p class="note">攻撃する前列ユニットの「アタック」を押すと、現在の基本パワー・増減値・ブーストを読み取って自動判定します。</p><div id="soloStatus"></div><div id="soloAttackButtons" class="solo-actions"></div><div id="soloDefense"></div><div id="soloLog" class="note" aria-live="polite"></div><details style="margin-top:12px"><summary>仮想相手のトリガー設定（合計16枚）</summary><div id="soloTriggerSettings"></div><label class="field">超トリガー<select id="soloOverChoice"><option>焼尽の精霊王 ヴァルナート</option><option>イナズマブレイク!!!</option><option>その他</option></select></label><button class="action" id="soloSaveSettings">設定を保存</button></details></div><label id="normalFieldDisplay" class="field">表示フィールド<select id="normalFieldSelect"><option value="both">自分・相手</option><option value="self">自分のみ</option></select></label><div class="power-board" id="powerBoard"></div>
   <div class="trigger-audio-shortcut"><label>自分のトリガー音声<select id="triggerQuickAudioMode"><option value="common">共通音声</option><option value="individual">個別音声</option></select></label><label>使用セット<select id="triggerQuickAudioSet"></select></label></div><section class="trigger-quick-panel"><h3 class="trigger-quick-title">トリガー効果</h3><div class="persona-buttons" style="margin:0 0 10px"><button type="button" class="persona-button active" id="triggerTargetSelf">自分</button><button type="button" class="persona-button" id="triggerTargetOpponent">相手</button></div><label class="field" style="margin:8px 0"><span>超トリガーのカード名</span><select id="superCardSelect" disabled style="width:100%;background:#101010;border:1px solid var(--line);border-radius:9px;color:white;padding:11px;font:inherit"><option>デッキタブで超トリガーを設定してください</option></select></label><div class="trigger-quick-buttons" id="triggerQuickButtons"></div><button type="button" class="action" id="undoQuickTrigger" style="width:100%;margin-top:9px;min-height:44px">トリガー操作を1つ戻す</button><div class="trigger-quick-status" id="triggerQuickStatus" aria-live="polite">トリガーを選択してください</div></section>
   <section class="history" style="margin:12px 0"><div class="history-head"><span>オーダー管理</span><span style="font-size:11px;color:#aaa">このターンの使用状況</span></div><div class="persona-buttons" style="margin-top:10px"><button type="button" class="persona-button" id="orderSelf">自分：未使用</button><button type="button" class="persona-button" id="orderOpponent">相手：未使用</button></div></section>
   <section class="persona-panel"><h3 class="persona-title">ペルソナライド</h3><div class="persona-buttons"><button type="button" class="persona-button" id="personaSelf">自分</button><button type="button" class="persona-button" id="personaOpponent">相手</button></div></section>
@@ -689,7 +690,7 @@ function renderTriggerAdvancedSettings(){
 }
 settingsMenuInit();openSettingsHome();fillTriggerSoundSelectors();
 
-const APP_VERSION="v55.6";
+const APP_VERSION="v55.7";
 let appWorkerRegistration=null;
 let appUpdateReady=false;
 function showAppUpdateStatus(message){const el=document.getElementById("appUpdateStatus");if(el)el.textContent=message}
@@ -1035,6 +1036,114 @@ renderSolo();
   body.append(choices);
   open();
  };
+})();
+
+// v55.7: opposing attacks are declared on the opposing front-row field.
+(function(){
+ const dlg=document.getElementById('soloAttackDialog'), body=document.getElementById('soloAttackDialogBody');
+ const close=document.getElementById('soloAttackDialogClose');
+ let pending=null;
+ const fmt=n=>Number(n||0).toLocaleString('ja-JP');
+ const make=(tag,txt,cls)=>{const el=document.createElement(tag);if(txt!==undefined)el.textContent=txt;if(cls)el.className=cls;return el};
+ const btn=(txt,fn)=>{const el=make('button',txt,'action gold');el.type='button';el.onclick=fn;return el};
+ function view(title,subtitle){body.replaceChildren();body.append(make('h3',title));if(subtitle)body.append(make('p',subtitle,'note'))}
+ function show(){dlg.style.display='flex';dlg.classList.add('show','active')}
+ function hide(){dlg.style.display='none';dlg.classList.remove('show','active');pending=null;renderPower()}
+ const oldClose=close.onclick;
+ close.onclick=()=>{if(pending){toast('攻撃の処理を完了してください');return}if(oldClose)oldClose();else hide()};
+ function isEnemy(){return !!(soloTabVisible&&state.fight?.solo&&state.fight?.startedAt&&state.fight.currentPlayer==='相手')}
+ function activeAttack(){const s=state.solo;return isEnemy()?s.queue?.[s.index]:null}
+ function expectedPos(a,index){if(a.v)return '中央';return index%2===0?'左':'右'}
+ function currentPower(a){return Number(a.power||0)}
+ function panel(){
+  if(!soloTabVisible)return;
+  const fields=document.querySelectorAll('#powerBoard .power-field');const opp=fields[0];if(!opp)return;
+  let progress=opp.querySelector('.solo-enemy-progress');if(!progress){progress=make('div',undefined,'solo-enemy-progress');opp.querySelector('.power-field-title')?.after(progress)}
+  const s=state.solo,att=activeAttack(),total=s.queue?.length||0;
+  progress.textContent=isEnemy()?`相手の攻撃　${s.index} / ${total} 回完了`:'相手の攻撃';
+  progress.style.display=isEnemy()?'block':'none';
+  const front=opp.querySelectorAll('.power-row')[1];if(!front)return;
+  const cols=[...front.querySelectorAll('.solo-unit-column')];
+  cols.forEach((col,i)=>{
+   const pos=['左','中央','右'][i],expected=att?expectedPos(att,s.index):null;
+   const attack=make('button','アタック','action gold solo-attack-button solo-enemy-attack');attack.type='button';
+   attack.disabled=!att||pos!==expected;
+   attack.onclick=()=>declare(pos);
+   col.insertBefore(attack,col.firstChild);
+   if(att&&pos===expected){
+    const slot=col.querySelector('.power-slot');
+    if(slot){const p=slot.querySelector('.slot-power'),c=slot.querySelector('.slot-crit'),base=slot.querySelector('.slot-base');
+     if(p)p.textContent='攻撃 '+fmt(currentPower(att));if(c)c.textContent='☆'+att.crit;
+     if(base)base.textContent=att.v?'相手V':'相手R';}
+   }
+  });
+  const def=document.getElementById('soloDefense');if(def&&isEnemy()){def.replaceChildren();def.style.display='none'}else if(def)def.style.display='';
+ }
+ function refresh(){save();renderPower();renderSolo();panel()}
+ function declare(pos){
+  const s=state.solo,a=activeAttack();if(!a||pending)return;
+  if(expectedPos(a,s.index)!==pos){toast('次の攻撃ユニットを選択してください');return}
+  pending={pos,index:s.index,results:[],damage:0,choice:null};s.attackRevealed=true;s.driveDone=false;s.driveResults=[];
+  show();attackStage();
+ }
+ function attackStage(){
+  const s=state.solo,a=s.queue[pending.index];
+  view(`相手の${a.v?'V':'R'}アタック　${pending.index+1} / ${s.queue.length}`,`前列${pending.pos}からの攻撃`);
+  body.append(make('div',`パワー ${fmt(a.power)}　｜　クリティカル ☆${a.crit}`,'solo-resolve-highlight'));
+  if(a.v&&!s.driveDone){body.append(btn(`ドライブチェック（${soloDriveCount()}回）`,()=>{
+    soloDoDrive(); // Existing trigger probabilities and effect application.
+    attackStage();
+  }));return}
+  if(a.v&&s.driveResults?.length){body.append(make('p','ドライブ結果：'+s.driveResults.join(' / '),'solo-resolve-highlight'))}
+  body.append(make('p','ガード方法を選択してください。ガード値の計算・判断はご自身で行います。','note'));
+  const choices=make('div',undefined,'solo-resolve-choices');
+  choices.append(btn('ノーガード（ダメージチェックへ）',()=>{pending.choice='ノーガード';damageStage()}));
+  choices.append(btn('ガード成功',()=>finishAttack('ガード成功')));
+  choices.append(btn('完全ガード',()=>finishAttack('完全ガード')));
+  choices.append(btn('攻撃不成立',()=>finishAttack('攻撃不成立')));
+  body.append(choices);
+ }
+ function damageStage(){
+  const a=state.solo.queue[pending.index],s=state.solo;
+  if(pending.damage>=a.crit||s.damage.自分>=6){finishAttack('ノーガード / ダメージ '+pending.damage+'点');return}
+  view(`ダメージチェック ${pending.damage+1} / ${a.crit}`,'ボタンを押すと1枚ずつトリガーを確認します。');
+  if(pending.results.length)body.append(make('p','ここまで：'+pending.results.join(' / '),'note'));
+  body.append(btn('ダメージチェック',()=>{
+   s.damage.自分=Math.min(6,s.damage.自分+1);pending.damage++;
+   const tr=soloRollTrigger();pending.results.push(tr?'トリガー '+tr:'トリガーなし');
+   if(tr==='治'&&s.damage.自分>s.damage.相手)s.damage.自分--;
+   view(`ダメージチェック ${pending.damage} / ${a.crit}`,'結果を確認してください。');
+   body.append(make('div',tr?'トリガー '+tr:'トリガーなし','solo-resolve-highlight'));
+   body.append(make('p',`自分のダメージ：${s.damage.自分} / 6`));
+   body.append(btn(pending.damage<a.crit&&s.damage.自分<6?'次のダメージチェック':'攻撃結果へ',()=>{
+    if(pending.damage<a.crit&&s.damage.自分<6)damageStage();else finishAttack('ノーガード / ダメージ '+pending.damage+'点');
+   }));
+   save();renderSolo();
+  }));
+ }
+ function finishAttack(result){
+  const s=state.solo,a=s.queue[pending.index];
+  const text=`${a.v?'V':'R'} ${fmt(a.power)} ☆${a.crit}：${result}`;
+  s.index++;s.attackRevealed=false;s.driveDone=false;s.driveResults=[];s.log='';
+  view('攻撃処理完了',text);
+  if(pending.results.length)body.append(make('p','ダメージチェック：'+pending.results.join(' / '),'note'));
+  body.append(make('div',`${s.index} / ${s.queue.length} 回完了`,'solo-resolve-highlight'));
+  if(s.index>=s.queue.length)body.append(make('p','相手の攻撃はすべて終了しました。ターン終了へ進めます。','note'));
+  pending=null;save();renderPower();
+  body.append(btn('閉じる',hide));
+ }
+ const oldRenderPower=renderPower;
+ renderPower=function(){oldRenderPower();panel()};
+ const oldRenderSolo=renderSolo;
+ renderSolo=function(){oldRenderSolo();if(isEnemy()){
+   const def=document.getElementById('soloDefense');if(def){def.replaceChildren();def.style.display='none'}
+  }panel()};
+ const oldTurn=soloTurnChanged;
+ soloTurnChanged=function(next){if(pending){toast('先に攻撃処理を完了してください');return}oldTurn(next);renderPower()};
+ // Ensure the existing turn-end handler cannot skip a partially resolved popup.
+ const end=document.getElementById('soloTurnEnd');if(end){const old=end.onclick;end.onclick=e=>{if(pending){toast('先に攻撃処理を完了してください');return}old?.call(end,e)}}
+ const top=document.getElementById('soloWorkbench');if(top){const note=top.querySelector('.note');if(note)note.textContent='相手ターンは相手前列の「アタック」を押し、ポップアップでドライブ・ガード・ダメージを順番に処理します。'}
+ renderPower();
 })();
 
 </script>
